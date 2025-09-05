@@ -5,6 +5,12 @@ import tagger from "@dhiwise/component-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  // Use a dynamic base for GitHub Pages (serves under /<repo>/)
+  // Locally and in non-Pages envs it stays '/'
+  base:
+    process.env.GITHUB_ACTIONS && process.env.GITHUB_REPOSITORY
+      ? `/${process.env.GITHUB_REPOSITORY.split("/").pop()}/`
+      : "/",
   // This changes the out put dir from dist to build
   // comment this out if that isn't relevant for your project
   build: {
