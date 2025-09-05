@@ -31,7 +31,7 @@ const HeroBanner = () => {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4">
-              <Link to="/register">
+              <Link to="/job-marketplace">
                 <Button variant="default" size="lg" iconName="ArrowRight" iconPosition="right">
                   Bắt đầu ngay
                 </Button>
