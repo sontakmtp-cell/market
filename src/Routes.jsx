@@ -12,6 +12,7 @@ import Homepage from './pages/homepage';
 import EmployerJobPosting from './pages/employer-job-posting';
 import CvSubmissionPortal from './pages/cv-submission-portal';
 import RecruitmentManagementDashboard from './pages/recruitment-management-dashboard';
+import RecruitmentPortal from './pages/recruitment-portal';
 
 const Routes = () => {
   return (
@@ -29,6 +30,7 @@ const Routes = () => {
         <Route path="/homepage" element={<Homepage />} />
         <Route path="/employer-job-posting" element={<EmployerJobPosting />} />
         <Route path="/cv-submission-portal" element={<CvSubmissionPortal />} />
+        <Route path="/recruitment" element={<RecruitmentPortal />} />
         <Route path="/recruitment-management-dashboard" element={<RecruitmentManagementDashboard />} />
         <Route path="*" element={<NotFound />} />
       </RouterRoutes>
