@@ -32,7 +32,7 @@ const CvSubmissionPortal = () => {
     // Documents
     cv: null,
     coverLetter: null,
-    portfolio: null,
+    portfolioFile: null,
     certificates: [],
     
     // Application specific

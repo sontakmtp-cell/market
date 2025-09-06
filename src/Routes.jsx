@@ -16,7 +16,7 @@ import RecruitmentPortal from './pages/recruitment-portal';
 
 const Routes = () => {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={import.meta.env.BASE_URL}>
       <ErrorBoundary>
       <ScrollToTop />
       <RouterRoutes>

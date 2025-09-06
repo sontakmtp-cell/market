@@ -19,7 +19,7 @@ const DocumentUpload = ({ data, onChange, errors }) => {
       description: 'PDF, DOC, DOCX (tối đa 5MB)',
       required: false
     },
-    portfolio: {
+    portfolioFile: {
       accept: '.pdf,.zip,.rar',
       maxSize: 10 * 1024 * 1024, // 10MB
       description: 'PDF, ZIP, RAR (tối đa 10MB)',
@@ -340,7 +340,7 @@ const DocumentUpload = ({ data, onChange, errors }) => {
         />
 
         <FileUploadArea
-          type="portfolio"
+          type="portfolioFile"
           title="Portfolio"
           description="Tổng hợp các dự án và sản phẩm đã thực hiện"
           icon="Briefcase"
@@ -390,11 +390,11 @@ const DocumentUpload = ({ data, onChange, errors }) => {
             </div>
             <div className="flex items-center space-x-2">
               <Icon 
-                name={data?.portfolio ? "CheckCircle" : "Circle"} 
+                name={data?.portfolioFile ? "CheckCircle" : "Circle"} 
                 size={14} 
-                className={data?.portfolio ? "text-success" : ""} 
+                className={data?.portfolioFile ? "text-success" : ""} 
               />
-              <span>Portfolio {data?.portfolio ? '✓' : ''}</span>
+              <span>Portfolio {data?.portfolioFile ? '✓' : ''}</span>
             </div>
             <div className="flex items-center space-x-2">
               <Icon 
@@ -412,3 +412,4 @@ const DocumentUpload = ({ data, onChange, errors }) => {
 };
 
 export default DocumentUpload;
+

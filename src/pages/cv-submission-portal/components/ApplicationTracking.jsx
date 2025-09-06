@@ -236,10 +236,10 @@ const ApplicationTracking = ({ formData, jobData, applicationStrength, onSubmit,
             <div className="flex items-center justify-between">
               <span className="text-muted-foreground">Portfolio:</span>
               <div className="flex items-center space-x-2">
-                {formData?.portfolio ? (
+                {formData?.portfolioFile ? (
                   <>
                     <Icon name="CheckCircle" size={16} className="text-success" />
-                    <span className="text-sm font-medium">{formData?.portfolio?.name}</span>
+                    <span className="text-sm font-medium">{formData?.portfolioFile ?.name}</span>
                   </>
                 ) : (
                   <span className="text-sm text-muted-foreground">Không có</span>
@@ -405,3 +405,4 @@ const ApplicationTracking = ({ formData, jobData, applicationStrength, onSubmit,
 };
 
 export default ApplicationTracking;
+
