@@ -14,14 +14,14 @@ const LoginPage = () => {
   useEffect(() => {
     // Redirect if already authenticated via Supabase
     if (!loading && user) {
-      navigate('/freelancer-dashboard');
+      navigate('/job-marketplace');
       return;
     }
 
     // Load saved language preference
     const savedLanguage = localStorage.getItem('preferredLanguage') || 'vi';
     setCurrentLanguage(savedLanguage);
-  }, [navigate]);
+  }, [loading, user, navigate]);
 
   const handleLanguageChange = (language) => {
     setCurrentLanguage(language);

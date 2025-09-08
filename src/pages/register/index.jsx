@@ -65,15 +65,7 @@ const Register = () => {
   // Redirect if already authenticated
   React.useEffect(() => {
     if (!loading && user) {
-      // Redirect to appropriate dashboard based on user role
-      const userRole = user?.user_metadata?.role || 'freelancer';
-      if (userRole === 'freelancer') {
-        navigate('/freelancer-dashboard');
-      } else if (userRole === 'employer') {
-        navigate('/recruitment-management-dashboard');
-      } else {
-        navigate('/homepage');
-      }
+      navigate('/job-marketplace');
     }
   }, [user, loading, navigate]);
 
@@ -591,7 +583,6 @@ const Register = () => {
 };
 
 export default Register;
-
 
 
 

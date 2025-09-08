@@ -43,7 +43,7 @@ const Routes = () => {
       <ScrollToTop />
       <RouterRoutes>
         {/* Define your route here */}
-        <Route path="/" element={<TestComponent />} />
+        <Route path="/" element={<Navigate to="/homepage" replace />} />
         <Route path="/job-marketplace" element={<JobMarketplace />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/job-details" element={<JobDetails />} />
