@@ -5,9 +5,12 @@ import FilterSidebar from './components/FilterSidebar';
 import SearchHeader from './components/SearchHeader';
 import JobGrid from './components/JobGrid';
 import { getProjects } from '../../utils/dataStore';
+import { useAuth } from '../../hooks/useAuth';
+import LoginPrompt from '../../components/LoginPrompt';
 
 const JobMarketplace = () => {
   const location = useLocation();
+  const { isAuthenticated } = useAuth();
   const [userRole, setUserRole] = useState('freelancer');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -313,6 +316,18 @@ const JobMarketplace = () => {
 
         {/* Main Content */}
         <div className="flex-1 flex flex-col min-h-screen lg:ml-0">
+          {/* Login Prompt for unauthenticated users */}
+          {!isAuthenticated && (
+            <div className="p-4 bg-primary/5 border-b border-primary/20">
+              <LoginPrompt 
+                title="Tham gia TechMarketplace để trải nghiệm đầy đủ"
+                message="Đăng nhập để ứng tuyển công việc, lưu dự án yêu thích và quản lý hồ sơ của bạn"
+                size="sm"
+                className="max-w-none bg-transparent border-0 p-0"
+              />
+            </div>
+          )}
+
           {/* Search Header */}
           <SearchHeader
             searchQuery={searchQuery}

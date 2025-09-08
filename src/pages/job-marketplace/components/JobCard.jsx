@@ -2,8 +2,11 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
+import { useAuth } from '../../../hooks/useAuth';
 
 const JobCard = ({ job, userRole = 'freelancer' }) => {
+  const { isAuthenticated, redirectToLogin } = useAuth();
+  
   const getCategoryIcon = (category) => {
     const icons = {
       'structural': 'Building',
@@ -40,6 +43,23 @@ const JobCard = ({ job, userRole = 'freelancer' }) => {
     if (daysLeft <= 3) return 'text-red-600';
     if (daysLeft <= 7) return 'text-yellow-600';
     return 'text-green-600';
+  };
+
+  const handleSaveJob = () => {
+    if (!isAuthenticated) {
+      redirectToLogin();
+      return;
+    }
+    // TODO: Implement save job functionality
+    alert('Đã lưu công việc!');
+  };
+
+  const handleApplyJob = () => {
+    if (!isAuthenticated) {
+      redirectToLogin();
+      return;
+    }
+    // Navigate to job details or application form
   };
 
   return (
@@ -134,15 +154,32 @@ const JobCard = ({ job, userRole = 'freelancer' }) => {
         <div className="flex items-center space-x-2">
           {userRole === 'freelancer' ? (
             <>
-              <Button variant="outline" size="sm">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleSaveJob}
+                disabled={!isAuthenticated}
+                title={!isAuthenticated ? "Đăng nhập để lưu công việc" : "Lưu công việc"}
+              >
                 <Icon name="Heart" size={14} className="mr-1" />
-                Lưu
+                {isAuthenticated ? "Lưu" : "Đăng nhập để lưu"}
               </Button>
-              <Link to={`/job-details?id=${job?.id}`}>
-                <Button variant="default" size="sm">
-                  Xem chi tiết
+              {isAuthenticated ? (
+                <Link to={`/job-details?id=${job?.id}`}>
+                  <Button variant="default" size="sm">
+                    Xem chi tiết
+                  </Button>
+                </Link>
+              ) : (
+                <Button 
+                  variant="default" 
+                  size="sm"
+                  onClick={redirectToLogin}
+                >
+                  <Icon name="LogIn" size={14} className="mr-1" />
+                  Đăng nhập để ứng tuyển
                 </Button>
-              </Link>
+              )}
             </>
           ) : (
             <>
@@ -151,10 +188,23 @@ const JobCard = ({ job, userRole = 'freelancer' }) => {
                   Xem đề xuất
                 </Button>
               </Link>
-              <Button variant="default" size="sm">
-                <Icon name="Edit" size={14} className="mr-1" />
-                Chỉnh sửa
-              </Button>
+              {isAuthenticated ? (
+                <Button variant="default" size="sm">
+                  <Icon name="Edit" size={14} className="mr-1" />
+                  Chỉnh sửa
+                </Button>
+              ) : (
+                <Button 
+                  variant="default" 
+                  size="sm"
+                  onClick={redirectToLogin}
+                  disabled
+                  title="Đăng nhập để chỉnh sửa"
+                >
+                  <Icon name="Lock" size={14} className="mr-1" />
+                  Đăng nhập để chỉnh sửa
+                </Button>
+              )}
             </>
           )}
         </div>

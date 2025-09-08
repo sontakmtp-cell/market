@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ROLES, ROLE_CONFIG } from '../../../utils/constants';
 import useProfileStore from '../../../utils/profileStore';
@@ -14,12 +14,16 @@ import CandidateProfileForm from './forms/CandidateProfileForm';
 import EmployerProfileForm from './forms/EmployerProfileForm';
 import ClientProfileForm from './forms/ClientProfileForm';
 import BasicInfoForm from './forms/BasicInfoForm';
+import { useSupabase } from '../../../contexts/SupabaseContext';
 
 const ProfileManager = () => {
   const navigate = useNavigate();
+  const { user } = useSupabase();
   const [currentRole, setCurrentRole] = useState(ROLES.FREELANCER);
   const { getCompletedItems, roleProfiles } = useProfileStore();
-  const currentUsername = 'user'; // In a real app, get this from auth state
+  const currentUsername = useMemo(() => (
+    (user?.user_metadata?.username || user?.email?.split('@')[0] || 'user')?.toString()
+  ), [user]);
 
   const handleRoleChange = (role) => {
     setCurrentRole(role);
@@ -46,7 +50,7 @@ const ProfileManager = () => {
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-2xl font-bold">Quản lý hồ sơ</h1>
           <button
-            onClick={() => navigate('/profile/user')}
+            onClick={() => navigate(`/profile/${currentUsername}`)}
             className="text-primary hover:text-primary/80"
           >
             Xem hồ sơ công khai

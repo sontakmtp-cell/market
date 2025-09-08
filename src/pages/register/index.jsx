@@ -11,11 +11,14 @@ import CompanyInfoForm from './components/CompanyInfoForm';
 import ProjectPreferencesForm from './components/ProjectPreferencesForm';
 import FileUploadSection from './components/FileUploadSection';
 import ProgressIndicator from './components/ProgressIndicator';
+import { useSupabase } from '../../contexts/SupabaseContext';
 
 const Register = () => {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
-  const [isLoading, setIsLoading] = useState(false);
+  
+  const [successMessage, setSuccessMessage] = useState('');
+  const { signUpWithPassword } = useSupabase();
   
   const [formData, setFormData] = useState({
     // Basic Info
@@ -182,6 +185,40 @@ const Register = () => {
       }
     } catch (error) {
       setErrors({ submit: 'Đã xảy ra lỗi. Vui lòng thử lại.' });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Real Supabase sign up
+  const handleSubmitReal = async () => {
+    if (!validateStep(5)) return;
+    setIsLoading(true);
+    try {
+      // Create username slug from email or name
+      const emailPrefix = (formData.email || '').split('@')[0];
+      const baseSlug = (formData.firstName + ' ' + formData.lastName).trim() || emailPrefix;
+      const username = baseSlug.toLowerCase().normalize('NFD').replace(/[^\w\s-]/g, '').replace(/[\s_-]+/g, '-').replace(/^-+|-+$/g, '');
+      
+      const options = {
+        data: {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          phone: formData.phone,
+          role: formData.selectedRole,
+          specializations: formData.selectedSpecializations,
+          username: username,
+        },
+        emailRedirectTo: window.location.origin + '/login',
+      };
+      const { error } = await signUpWithPassword(formData.email, formData.password, options);
+      if (error) {
+        setErrors({ submit: error.message });
+        return;
+      }
+      navigate('/login');
+    } catch (error) {
+      setErrors({ submit: error?.message || 'Đã xảy ra lỗi. Vui lòng thử lại.' });
     } finally {
       setIsLoading(false);
     }
@@ -510,7 +547,7 @@ const Register = () => {
               ) : (
                 <Button
                   variant="default"
-                  onClick={handleSubmit}
+                  onClick={handleSubmitReal}
                   loading={isLoading}
                   iconName="Check"
                   iconPosition="left"
@@ -537,3 +574,9 @@ const Register = () => {
 };
 
 export default Register;
+
+
+
+
+
+

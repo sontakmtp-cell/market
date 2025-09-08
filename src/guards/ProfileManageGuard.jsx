@@ -1,17 +1,14 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
+import { useSupabase } from '../contexts/SupabaseContext';
 
-// In a real app, this would check with authentication state
-// For now, we'll simulate a logged-in user
 const ProfileManageGuard = ({ children }) => {
   const location = useLocation();
-  
-  // Check auth token - matching the login system
-  const authToken = localStorage.getItem('authToken');
-  const isAuthenticated = !!authToken;
-  
-  if (!isAuthenticated) {
-    // Redirect to login with return URL
+  const { user, loading } = useSupabase();
+
+  if (loading) return null; // Optionally render a spinner
+
+  if (!user) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 

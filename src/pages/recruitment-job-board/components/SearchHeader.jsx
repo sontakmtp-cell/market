@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
+import { useAuth } from '../../../hooks/useAuth';
 
 const SearchHeader = ({
   searchQuery,
@@ -13,6 +14,7 @@ const SearchHeader = ({
   onFilterToggle,
   jobCount = 0,
 }) => {
+  const { isAuthenticated } = useAuth();
   return (
     <div className="bg-card border-b border-border">
       <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-4">
@@ -57,11 +59,14 @@ const SearchHeader = ({
                 List
               </button>
             </div>
-            <Link to="/recruitment-management-dashboard">
-              <Button variant="default" size="sm">
-                <Icon name="LayoutDashboard" size={16} className="mr-2" /> Dashboard
-              </Button>
-            </Link>
+            {/* Dashboard Button - Only show when authenticated */}
+            {isAuthenticated && (
+              <Link to="/recruitment-management-dashboard">
+                <Button variant="default" size="sm">
+                  <Icon name="LayoutDashboard" size={16} className="mr-2" /> Dashboard
+                </Button>
+              </Link>
+            )}
             <Button variant="outline" className="md:hidden" onClick={onFilterToggle}>
               <Icon name="Sliders" size={16} className="mr-2" /> Filters
             </Button>

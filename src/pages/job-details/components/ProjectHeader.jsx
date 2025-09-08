@@ -1,8 +1,10 @@
 import React from 'react';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
+import { useAuth } from '../../../hooks/useAuth';
 
 const ProjectHeader = ({ project, onSaveJob, isSaved }) => {
+  const { isAuthenticated } = useAuth();
   return (
     <div className="bg-card border border-border rounded-lg p-6 mb-6">
       <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
@@ -47,11 +49,13 @@ const ProjectHeader = ({ project, onSaveJob, isSaved }) => {
           <Button
             variant="outline"
             onClick={onSaveJob}
-            iconName={isSaved ? "Heart" : "Heart"}
+            iconName={isAuthenticated && isSaved ? "Heart" : "Heart"}
             iconPosition="left"
-            className={isSaved ? "text-error border-error" : ""}
+            className={isAuthenticated && isSaved ? "text-error border-error" : ""}
+            disabled={!isAuthenticated}
+            title={!isAuthenticated ? "Đăng nhập để lưu công việc" : ""}
           >
-            {isSaved ? "Đã lưu" : "Lưu công việc"}
+            {isAuthenticated ? (isSaved ? "Đã lưu" : "Lưu công việc") : "Đăng nhập để lưu"}
           </Button>
           <Button
             variant="ghost"

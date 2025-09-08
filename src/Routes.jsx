@@ -17,27 +17,71 @@ import RecruitmentJobBoard from './pages/recruitment-job-board';
 import PublicProfile from './pages/profile-public';
 import ProfileManage from './pages/profile-manage';
 import ProfileManageGuard from './guards/ProfileManageGuard';
+import AuthGuard from './guards/AuthGuard';
 import SimpleProfileManage from './pages/profile-manage/simple';
 import DebugPage from './pages/debug';
+import { useSupabase } from './contexts/SupabaseContext';
+
+// Test component to check Supabase
+const TestComponent = () => {
+  console.log('TestComponent rendering...');
+  
+  // First test without Supabase
+  return (
+    <div style={{color: 'black', fontSize: '18px', padding: '20px', backgroundColor: 'white', fontFamily: 'Arial', minHeight: '100vh'}}>
+      <h1>Basic Test Component</h1>
+      <p>This is working without Supabase!</p>
+      <p>Check console for logs.</p>
+      <br />
+      <button 
+        onClick={() => window.location.href = '/debug'} 
+        style={{padding: '10px 20px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '5px'}}
+      >
+        Go to Debug Page
+      </button>
+    </div>
+  );
+};
 
 const Routes = () => {
+  console.log('Routes component rendering...');
   return (
     <BrowserRouter basename={import.meta.env.BASE_URL}>
       <ErrorBoundary>
       <ScrollToTop />
       <RouterRoutes>
         {/* Define your route here */}
-        <Route path="/" element={<FreelancerDashboard />} />
+        <Route path="/" element={<TestComponent />} />
         <Route path="/job-marketplace" element={<JobMarketplace />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/job-details" element={<JobDetails />} />
-        <Route path="/job-post" element={<JobPost />} />
-        <Route path="/freelancer-dashboard" element={<FreelancerDashboard />} />
+        <Route path="/job-post" element={
+          <AuthGuard>
+            <JobPost />
+          </AuthGuard>
+        } />
+        <Route path="/freelancer-dashboard" element={
+          <AuthGuard>
+            <FreelancerDashboard />
+          </AuthGuard>
+        } />
         <Route path="/register" element={<Register />} />
         <Route path="/homepage" element={<Homepage />} />
-        <Route path="/employer-job-posting" element={<EmployerJobPosting />} />
-        <Route path="/cv-submission-portal" element={<CvSubmissionPortal />} />
-        <Route path="/recruitment-management-dashboard" element={<RecruitmentManagementDashboard />} />
+        <Route path="/employer-job-posting" element={
+          <AuthGuard>
+            <EmployerJobPosting />
+          </AuthGuard>
+        } />
+        <Route path="/cv-submission-portal" element={
+          <AuthGuard>
+            <CvSubmissionPortal />
+          </AuthGuard>
+        } />
+        <Route path="/recruitment-management-dashboard" element={
+          <AuthGuard>
+            <RecruitmentManagementDashboard />
+          </AuthGuard>
+        } />
         <Route path="/recruitment-job-board" element={<RecruitmentJobBoard />} />
         {/* Profile routes */}
         <Route path="/profile" element={<Navigate to="/profile/manage" replace />} />

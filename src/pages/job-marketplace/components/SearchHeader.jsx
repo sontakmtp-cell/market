@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
+import { useAuth } from '../../../hooks/useAuth';
 
 
 const SearchHeader = ({ 
@@ -16,6 +17,7 @@ const SearchHeader = ({
   userRole = 'freelancer',
   filters = {} // Add this parameter with default value
 }) => {
+  const { isAuthenticated, redirectToLogin } = useAuth();
   const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
 
   const sortOptions = [
@@ -105,12 +107,15 @@ const SearchHeader = ({
 
           {/* Right Side - Sort & View Controls */}
           <div className="flex items-center space-x-3">
-            <Link to="/freelancer-dashboard">
-              <Button variant="default" size="sm">
-                <Icon name="LayoutDashboard" size={16} className="mr-2" />
-                Dashboard
-              </Button>
-            </Link>
+            {/* Dashboard Button - Only show when authenticated */}
+            {isAuthenticated && (
+              <Link to="/freelancer-dashboard">
+                <Button variant="default" size="sm">
+                  <Icon name="LayoutDashboard" size={16} className="mr-2" />
+                  Dashboard
+                </Button>
+              </Link>
+            )}
             {/* Sort Dropdown */}
             <div className="relative group">
               <Button variant="outline" className="flex items-center space-x-2">
@@ -163,13 +168,24 @@ const SearchHeader = ({
 
             {/* Post Job Button for Clients */}
             {userRole === 'client' && (
-              <Link to="/job-post">
-                <Button variant="default">
-                  <Icon name="Plus" size={16} className="mr-2" />
-                  <span className="hidden sm:inline">Đăng dự án mới</span>
-                  <span className="sm:hidden">Đăng</span>
+              isAuthenticated ? (
+                <Link to="/job-post">
+                  <Button variant="default">
+                    <Icon name="Plus" size={16} className="mr-2" />
+                    <span className="hidden sm:inline">Đăng dự án mới</span>
+                    <span className="sm:hidden">Đăng</span>
+                  </Button>
+                </Link>
+              ) : (
+                <Button 
+                  variant="default"
+                  onClick={redirectToLogin}
+                >
+                  <Icon name="LogIn" size={16} className="mr-2" />
+                  <span className="hidden sm:inline">Đăng nhập để đăng dự án</span>
+                  <span className="sm:hidden">Đăng nhập</span>
                 </Button>
-              </Link>
+              )
             )}
           </div>
         </div>
