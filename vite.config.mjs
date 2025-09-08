@@ -5,6 +5,11 @@ import tagger from "@dhiwise/component-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  // Use a dynamic base when building on GitHub Actions for Pages
+  // GITHUB_REPOSITORY is in the form "owner/repo"
+  base: process.env.GITHUB_REPOSITORY
+    ? `/${process.env.GITHUB_REPOSITORY.split("/").pop()}/`
+    : "/",
   // This changes the out put dir from dist to build
   // comment this out if that isn't relevant for your project
   build: {
