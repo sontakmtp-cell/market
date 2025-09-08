@@ -82,7 +82,7 @@ const LoginForm = ({ onLanguageChange, currentLanguage }) => {
       <div className="bg-card rounded-lg shadow-elevation-2 p-8 border border-border">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-yellow-500 rounded-full flex items-center justify-center mx-auto mb-4">
             <Icon name="Zap" size={32} color="white" />
           </div>
           <h1 className="text-2xl font-bold text-foreground mb-2">

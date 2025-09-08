@@ -15,7 +15,9 @@ import { useSupabase } from '../../contexts/SupabaseContext';
 
 const Register = () => {
   const navigate = useNavigate();
+  const { user, loading } = useSupabase();
   const [currentStep, setCurrentStep] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
   
   const [successMessage, setSuccessMessage] = useState('');
   const { signUpWithPassword } = useSupabase();
@@ -59,6 +61,21 @@ const Register = () => {
   });
 
   const [errors, setErrors] = useState({});
+
+  // Redirect if already authenticated
+  React.useEffect(() => {
+    if (!loading && user) {
+      // Redirect to appropriate dashboard based on user role
+      const userRole = user?.user_metadata?.role || 'freelancer';
+      if (userRole === 'freelancer') {
+        navigate('/freelancer-dashboard');
+      } else if (userRole === 'employer') {
+        navigate('/recruitment-management-dashboard');
+      } else {
+        navigate('/homepage');
+      }
+    }
+  }, [user, loading, navigate]);
 
   const steps = [
     {
