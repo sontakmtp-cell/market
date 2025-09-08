@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import Header from '../../components/ui/Header';
 import Icon from '../../components/AppIcon';
 import Button from '../../components/ui/Button';
@@ -9,9 +9,11 @@ import ClientInfo from './components/ClientInfo';
 import ProjectSidebar from './components/ProjectSidebar';
 import ProposalForm from './components/ProposalForm';
 import ExistingProposals from './components/ExistingProposals';
+import { getProjectById } from '../../utils/dataStore';
 
 const JobDetails = () => {
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [project, setProject] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -225,17 +227,66 @@ const JobDetails = () => {
     const token = localStorage.getItem('authToken');
     setIsAuthenticated(!!token);
 
+    // Get project ID from query params or URL params
+    const projectId = searchParams.get('id') || id;
+
     // Simulate loading project data
     setIsLoading(true);
+    
+    // Try to get project from localStorage first
+    const storedProject = projectId ? getProjectById(projectId) : null;
+    
     setTimeout(() => {
-      setProject(mockProject);
+      if (storedProject) {
+        // Map stored project to the format expected by the UI
+        const mappedProject = {
+          ...storedProject,
+          budget: `${storedProject.budgetMin?.toLocaleString('vi-VN')} - ${storedProject.budgetMax?.toLocaleString('vi-VN')} ${storedProject.currency}`,
+          proposals: storedProject.proposalCount || 0,
+          status: storedProject.status === 'active' ? 'Đang mở' : 'Đã đóng',
+          postedTime: storedProject.postedAt ? getTimeAgo(storedProject.postedAt) : 'Vừa đăng',
+          averageBid: `${Math.floor((storedProject.budgetMin + storedProject.budgetMax) / 2)?.toLocaleString('vi-VN')} ${storedProject.currency}`,
+          competitionLevel: Math.min(5, Math.max(1, storedProject.proposalCount ? Math.ceil(storedProject.proposalCount / 3) : 1)),
+          views: Math.floor(Math.random() * 200) + 50, // Random views for now
+          timeLeft: storedProject.deadline ? getTimeLeft(storedProject.deadline) : 'Không giới hạn',
+          referenceFiles: storedProject.attachments || []
+        };
+        setProject(mappedProject);
+      } else {
+        // Fallback to mock project
+        setProject(mockProject);
+      }
       setIsLoading(false);
-    }, 1000);
+    }, 500);
 
     // Check if job is saved
     const savedJobs = JSON.parse(localStorage.getItem('savedJobs') || '[]');
-    setIsSaved(savedJobs?.includes(id));
-  }, [id]);
+    setIsSaved(savedJobs?.includes(projectId || 'proj-001'));
+  }, [id, searchParams]);
+
+  // Helper function to calculate time ago
+  const getTimeAgo = (dateString) => {
+    const now = new Date();
+    const past = new Date(dateString);
+    const diffInHours = Math.floor((now - past) / (1000 * 60 * 60));
+    
+    if (diffInHours < 1) return 'Vừa đăng';
+    if (diffInHours < 24) return `${diffInHours} giờ trước`;
+    const diffInDays = Math.floor(diffInHours / 24);
+    return `${diffInDays} ngày trước`;
+  };
+
+  // Helper function to calculate time left
+  const getTimeLeft = (deadline) => {
+    const now = new Date();
+    const end = new Date(deadline);
+    const diffInDays = Math.floor((end - now) / (1000 * 60 * 60 * 24));
+    
+    if (diffInDays < 0) return 'Đã hết hạn';
+    if (diffInDays === 0) return 'Hôm nay';
+    if (diffInDays === 1) return 'Ngày mai';
+    return `${diffInDays} ngày`;
+  };
 
   const handleSaveJob = () => {
     const savedJobs = JSON.parse(localStorage.getItem('savedJobs') || '[]');

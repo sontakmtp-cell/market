@@ -1,7 +1,8 @@
-// Simple localStorage-backed data store for Recruitment Portal
+// Simple localStorage-backed data store for Recruitment Portal & Job Marketplace
 // Keys
 const JOBS_KEY = 'recruitment_jobs';
 const APPLICATIONS_KEY = 'recruitment_applications';
+const MARKETPLACE_PROJECTS_KEY = 'marketplace_projects';
 
 // Helpers
 const read = (key) => {
@@ -125,5 +126,55 @@ export const updateApplicationStatus = (id, status) => {
   apps[idx] = { ...apps[idx], status, updatedAt: new Date().toISOString() };
   write(APPLICATIONS_KEY, apps);
   return apps[idx];
+};
+
+// Marketplace Projects
+export const getProjects = () => read(MARKETPLACE_PROJECTS_KEY);
+
+export const getProjectById = (id) => {
+  return getProjects().find((p) => String(p.id) === String(id));
+};
+
+export const saveProject = (project) => {
+  const projects = getProjects();
+  const id = project.id || genId('project');
+  const now = new Date().toISOString();
+  const newProject = {
+    id,
+    title: '',
+    shortDescription: '',
+    fullDescription: '',
+    category: '',
+    skills: [],
+    budgetMin: 0,
+    budgetMax: 0,
+    currency: 'VND',
+    duration: '',
+    deadline: '',
+    isUrgent: false,
+    location: '',
+    attachments: [],
+    objectives: [],
+    technicalRequirements: [],
+    deliverables: [],
+    client: {
+      name: '',
+      company: '',
+      rating: 0,
+      reviewCount: 0,
+      location: ''
+    },
+    postedAt: now,
+    proposalCount: 0,
+    status: 'active',
+    createdAt: now,
+    updatedAt: now,
+    ...project,
+  };
+  const idx = projects.findIndex((p) => String(p.id) === String(id));
+  if (idx >= 0) projects[idx] = { ...projects[idx], ...newProject, updatedAt: now };
+  else projects.unshift(newProject);
+  write(MARKETPLACE_PROJECTS_KEY, projects);
+  return newProject;
 };
 

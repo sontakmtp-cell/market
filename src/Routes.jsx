@@ -6,6 +6,7 @@ import NotFound from "pages/NotFound";
 import JobMarketplace from './pages/job-marketplace';
 import LoginPage from './pages/login';
 import JobDetails from './pages/job-details';
+import JobPost from './pages/job-post';
 import FreelancerDashboard from './pages/freelancer-dashboard';
 import Register from './pages/register';
 import Homepage from './pages/homepage';
@@ -30,6 +31,7 @@ const Routes = () => {
         <Route path="/job-marketplace" element={<JobMarketplace />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/job-details" element={<JobDetails />} />
+        <Route path="/job-post" element={<JobPost />} />
         <Route path="/freelancer-dashboard" element={<FreelancerDashboard />} />
         <Route path="/register" element={<Register />} />
         <Route path="/homepage" element={<Homepage />} />

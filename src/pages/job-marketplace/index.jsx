@@ -4,6 +4,7 @@ import Header from '../../components/ui/Header';
 import FilterSidebar from './components/FilterSidebar';
 import SearchHeader from './components/SearchHeader';
 import JobGrid from './components/JobGrid';
+import { getProjects } from '../../utils/dataStore';
 
 const JobMarketplace = () => {
   const location = useLocation();
@@ -159,8 +160,36 @@ const JobMarketplace = () => {
 
     // Simulate loading
     setTimeout(() => {
-      setJobs(mockJobs);
-      setFilteredJobs(mockJobs);
+      // Get projects from localStorage and convert to job format
+      const storedProjects = getProjects();
+      const convertedProjects = storedProjects.map(project => ({
+        id: project.id,
+        title: project.title,
+        category: project.category,
+        description: project.fullDescription || project.shortDescription,
+        shortDescription: project.shortDescription,
+        budgetMin: project.budgetMin,
+        budgetMax: project.budgetMax,
+        deadline: new Date(project.deadline),
+        skills: project.skills || [],
+        isUrgent: project.isUrgent,
+        client: {
+          name: project.client?.name || 'Khách hàng',
+          rating: project.client?.rating || 5,
+          reviewCount: project.client?.reviewCount || 0,
+          hireCount: Math.floor(Math.random() * 20) + 1
+        },
+        proposalCount: project.proposalCount || 0,
+        postedAt: new Date(project.postedAt),
+        applicationStatus: null,
+        location: project.location,
+        duration: project.duration
+      }));
+
+      // Merge stored projects with mock jobs (stored projects first)
+      const allJobs = [...convertedProjects, ...mockJobs];
+      setJobs(allJobs);
+      setFilteredJobs(allJobs);
       setLoading(false);
     }, 1000);
   }, []);

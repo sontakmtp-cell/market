@@ -163,7 +163,7 @@ const SearchHeader = ({
 
             {/* Post Job Button for Clients */}
             {userRole === 'client' && (
-              <Link to="/employer-job-posting">
+              <Link to="/job-post">
                 <Button variant="default">
                   <Icon name="Plus" size={16} className="mr-2" />
                   <span className="hidden sm:inline">Đăng dự án mới</span>

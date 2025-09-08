@@ -274,7 +274,7 @@ const FreelancerDashboard = () => {
                     </>
                   ) : (
                     <>
-                      <Link to="/employer-job-posting">
+                      <Link to="/job-post">
                         <Button variant="default" iconName="Plus" iconPosition="left">
                           Đăng dự án mới
                         </Button>
