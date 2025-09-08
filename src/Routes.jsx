@@ -19,7 +19,6 @@ import ProfileManage from './pages/profile-manage';
 import ProfileManageGuard from './guards/ProfileManageGuard';
 import AuthGuard from './guards/AuthGuard';
 import SimpleProfileManage from './pages/profile-manage/simple';
-import DebugPage from './pages/debug';
 import { useSupabase } from './contexts/SupabaseContext';
 
 // Test component to check Supabase
@@ -32,13 +31,6 @@ const TestComponent = () => {
       <h1>Basic Test Component</h1>
       <p>This is working without Supabase!</p>
       <p>Check console for logs.</p>
-      <br />
-      <button 
-        onClick={() => window.location.href = '/debug'} 
-        style={{padding: '10px 20px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '5px'}}
-      >
-        Go to Debug Page
-      </button>
     </div>
   );
 };
@@ -97,7 +89,6 @@ const Routes = () => {
           </ProfileManageGuard>
         } />
         <Route path="/profile/:username" element={<PublicProfile />} />
-        <Route path="/debug" element={<DebugPage />} />
         <Route path="*" element={<NotFound />} />
       </RouterRoutes>
       </ErrorBoundary>

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '../../components/ui/Header';
-import DashboardSidebar from '../../components/ui/DashboardSidebar';
 import MetricsCard from './components/MetricsCard';
 import ProjectCard from './components/ProjectCard';
 import NotificationCenter from './components/NotificationCenter';
@@ -19,7 +18,6 @@ import { ROLES } from '../../utils/constants';
 
 const FreelancerDashboard = () => {
   console.log('FreelancerDashboard component rendering...');
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [userRole, setUserRole] = useState('freelancer'); // freelancer or client
 
@@ -225,18 +223,10 @@ const FreelancerDashboard = () => {
     });
   };
 
-  const toggleSidebar = () => {
-    setSidebarCollapsed(!sidebarCollapsed);
-  };
-
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <DashboardSidebar 
-        isCollapsed={sidebarCollapsed} 
-        onToggleCollapse={toggleSidebar}
-      />
-      <main className={`pt-16 transition-all duration-300 ${sidebarCollapsed ? 'ml-16' : 'ml-64'}`}>
+      <main className="pt-16">
         <div className="p-6 max-w-7xl mx-auto">
           {/* Dashboard Header */}
           <div className="flex items-center justify-between mb-8">

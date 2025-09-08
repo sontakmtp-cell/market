@@ -64,12 +64,11 @@ const Header = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/homepage" className="flex items-center space-x-3 hover:opacity-80 transition-smooth">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <Icon name="Zap" size={20} color="white" />
+            <div className="w-8 h-8 bg-yellow-500 rounded-lg flex items-center justify-center">
+              <Icon name="Zap" size={20} color="#000000" />
             </div>
             <div className="flex flex-col">
-              <span className="text-lg font-semibold text-foreground leading-none">TechMarketplace</span>
-              <span className="text-xs text-muted-foreground leading-none">Pro</span>
+              <span className="text-lg font-semibold text-foreground leading-none">Kỹ Thuật Vàng</span>
             </div>
           </Link>
 
