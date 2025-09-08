@@ -316,7 +316,7 @@ const JobPost = () => {
                   <Select
                     label="Danh mục *"
                     value={formData.category}
-                    onChange={(e) => handleInputChange('category', e.target.value)}
+                    onChange={(value) => handleInputChange('category', value)}
                     options={categories}
                     placeholder="Chọn danh mục"
                     error={errors.category}
@@ -485,7 +485,7 @@ const JobPost = () => {
                   <Select
                     label="Đơn vị tiền tệ"
                     value={formData.currency}
-                    onChange={(e) => handleInputChange('currency', e.target.value)}
+                    onChange={(value) => handleInputChange('currency', value)}
                     options={currencies}
                   />
                 </div>
