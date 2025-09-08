@@ -11,43 +11,71 @@ const SkillsSelector = ({ data, onChange, errors }) => {
 
   // Predefined skills by category
   const skillCategories = {
-    frontend: [
-      'React', 'Vue.js', 'Angular', 'JavaScript', 'TypeScript', 'HTML5', 'CSS3',
-      'Sass/SCSS', 'Tailwind CSS', 'Bootstrap', 'jQuery', 'Webpack', 'Vite'
+    'cad-software': [
+      'AutoCAD', 'SolidWorks', 'CATIA', 'NX (Unigraphics)', 'Inventor', 'Fusion 360',
+      'Pro/ENGINEER (Creo)', 'Mastercam', 'PowerMill', 'EdgeCAM', 'ANSYS', 'KeyShot'
     ],
-    backend: [
-      'Node.js', 'Python', 'Java', 'PHP', 'C#', '.NET', 'Ruby on Rails',
-      'Express.js', 'Django', 'Spring Boot', 'Laravel', 'ASP.NET', 'FastAPI'
+    'machining': [
+      'Vận hành máy tiện', 'Vận hành máy phay', 'Vận hành máy bào', 'Vận hành máy mài',
+      'Gia công CNC', 'Lập trình CNC', 'Máy cắt plasma', 'Máy cắt laser', 'Máy EDM',
+      'Đo lường CMM', 'Sử dụng thước cặp', 'Sử dụng panme', 'Đồng hồ so'
     ],
-    database: [
-      'MySQL', 'PostgreSQL', 'MongoDB', 'Redis', 'SQLServer', 'Oracle',
-      'Elasticsearch', 'DynamoDB', 'Firebase', 'Supabase'
+    'welding': [
+      'Hàn que (SMAW)', 'Hàn MIG/MAG (GMAW)', 'Hàn TIG (GTAW)', 'Hàn hồ quang',
+      'Hàn 2G (nằm ngang)', 'Hàn 3G (đứng)', 'Hàn 3F (đứng góc)', 'Hàn 4G (trần)',
+      'Hàn 5G (ống nằm ngang)', 'Hàn 6G (ống nghiêng)', 'Hàn đường ống', 'Hàn kết cấu thép'
     ],
-    cloud: [
-      'AWS', 'Azure', 'Google Cloud', 'Docker', 'Kubernetes', 'Jenkins',
-      'GitLab CI', 'GitHub Actions', 'Terraform', 'Ansible'
+    'construction': [
+      'Đọc bản vẽ xây dựng', 'Quản lý dự án xây dựng', 'Giám sát thi công',
+      'Kiểm định chất lượng', 'An toàn lao động', 'Kết cấu bê tông', 'Kết cấu thép',
+      'Khảo sát địa chất', 'Thiết kế móng', 'Cọc khoan nhồi', 'Coffa', 'Ván khuôn'
     ],
-    mobile: [
-      'React Native', 'Flutter', 'iOS Development', 'Android Development',
-      'Swift', 'Kotlin', 'Xamarin', 'Ionic'
+    'materials': [
+      'Thép carbon', 'Thép không gỉ', 'Nhôm hợp kim', 'Gang xám', 'Đồng thau',
+      'Vật liệu composite', 'Bê tông cốt thép', 'Thép cường độ cao', 'Vật liệu chịu nhiệt',
+      'Kiểm tra phá hỏng', 'Kiểm tra không phá hỏng', 'Phân tích kim loại học'
     ],
-    tools: [
-      'Git', 'Jira', 'Trello', 'Figma', 'Adobe XD', 'Sketch', 'Photoshop',
-      'Postman', 'VS Code', 'IntelliJ IDEA'
+    'quality-control': [
+      'ISO 9001', 'Six Sigma', 'Lean Manufacturing', 'SPC (Statistical Process Control)',
+      'FMEA', 'MSA (Measurement System Analysis)', '5S', 'Kaizen', 'TPM',
+      'Kiểm tra chất lượng', 'Quản lý chất lượng', 'Audit nội bộ'
     ]
   };
 
   const certifications = [
-    'AWS Certified Developer',
-    'Google Cloud Professional',
-    'Microsoft Azure Fundamentals',
-    'Certified Kubernetes Administrator',
-    'Oracle Certified Professional',
-    'MongoDB Certified Developer',
-    'Scrum Master Certified',
-    'PMP Certification',
-    'CISSP',
-    'CompTIA Security+'
+    // Chứng chỉ hàn
+    'Chứng chỉ thợ hàn AWS D1.1',
+    'Chứng chỉ thợ hàn ASME IX',
+    'Chứng chỉ thợ hàn EN ISO 9606',
+    'Chứng chỉ thợ hàn JIS Z 3801',
+    'Chứng chỉ thợ hàn đường ống API 1104',
+    
+    // Chứng chỉ kỹ thuật
+    'Chứng chỉ vận hành CNC',
+    'Chứng chỉ lập trình CNC',
+    'Chứng chỉ AutoCAD Professional',
+    'Chứng chỉ SolidWorks Professional',
+    'Chứng chỉ CATIA Specialist',
+    
+    // Chứng chỉ an toàn
+    'Chứng chỉ An toàn lao động',
+    'Chứng chỉ Phòng cháy chữa cháy',
+    'Chứng chỉ Làm việc trên cao',
+    'Chứng chỉ Vận hành cầu trục',
+    'Chứng chỉ Vận hành xe nâng',
+    
+    // Chứng chỉ quản lý
+    'Chứng chỉ ISO 9001 Lead Auditor',
+    'Chứng chỉ Six Sigma Green Belt',
+    'Chứng chỉ Six Sigma Black Belt',
+    'Chứng chỉ Lean Manufacturing',
+    'Chứng chỉ PMP (Project Management)',
+    
+    // Chứng chỉ kỹ thuật xây dựng
+    'Chứng chỉ Kỹ sư xây dựng',
+    'Chứng chỉ Giám sát thi công',
+    'Chứng chỉ Quản lý dự án xây dựng',
+    'Chứng chỉ Kiểm định chất lượng công trình'
   ];
 
   const allSkills = Object.values(skillCategories)?.flat();
@@ -82,6 +110,12 @@ const SkillsSelector = ({ data, onChange, errors }) => {
     });
   };
 
+  const clearAllSkills = () => {
+    onChange({
+      skills: []
+    });
+  };
+
   const addCertification = (cert) => {
     if (cert && !data?.certifications?.includes(cert)) {
       onChange({
@@ -94,6 +128,12 @@ const SkillsSelector = ({ data, onChange, errors }) => {
   const removeCertification = (certToRemove) => {
     onChange({
       certifications: data?.certifications?.filter(cert => cert !== certToRemove)
+    });
+  };
+
+  const clearAllCertifications = () => {
+    onChange({
+      certifications: []
     });
   };
 
@@ -123,7 +163,7 @@ const SkillsSelector = ({ data, onChange, errors }) => {
           Kỹ năng & Chứng chỉ yêu cầu
         </h3>
         <p className="text-muted-foreground mb-6">
-          Chọn các kỹ năng kỹ thuật và chứng chỉ cần thiết cho vị trí này.
+          Chọn các kỹ năng kỹ thuật, phần mềm và chứng chỉ cần thiết cho vị trí kỹ thuật cơ khí, xây dựng này.
         </p>
       </div>
       {/* Technical Skills Section */}
@@ -137,7 +177,7 @@ const SkillsSelector = ({ data, onChange, errors }) => {
         {/* Skill Input */}
         <div className="relative">
           <Input
-            placeholder="Nhập tên kỹ năng (ví dụ: React, Python, AWS...)"
+            placeholder="Nhập tên kỹ năng (ví dụ: AutoCAD, SolidWorks, Hàn TIG, Vận hành máy tiện...)"
             value={skillInput}
             onChange={(e) => handleSkillInputChange(e?.target?.value)}
             onKeyPress={handleSkillKeyPress}
@@ -164,27 +204,49 @@ const SkillsSelector = ({ data, onChange, errors }) => {
         <div className="space-y-2">
           <p className="text-sm text-muted-foreground">Thêm nhanh theo danh mục:</p>
           <div className="flex flex-wrap gap-2">
-            {Object.keys(skillCategories)?.map((category) => (
-              <Button
-                key={category}
-                variant="outline"
-                size="sm"
-                onClick={() => addSkillCategory(category)}
-                className="text-xs"
-              >
-                <Icon name="Plus" size={14} className="mr-1" />
-                {category?.charAt(0)?.toUpperCase() + category?.slice(1)}
-              </Button>
-            ))}
+            {Object.keys(skillCategories)?.map((category) => {
+              const categoryLabels = {
+                'cad-software': 'Phần mềm CAD',
+                'machining': 'Gia công cơ khí',
+                'welding': 'Kỹ thuật hàn',
+                'construction': 'Xây dựng',
+                'materials': 'Vật liệu',
+                'quality-control': 'Kiểm soát chất lượng'
+              };
+              
+              return (
+                <Button
+                  key={category}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => addSkillCategory(category)}
+                  className="text-xs"
+                >
+                  <Icon name="Plus" size={14} className="mr-1" />
+                  {categoryLabels[category] || category}
+                </Button>
+              );
+            })}
           </div>
         </div>
 
         {/* Selected Skills */}
         {data?.skills?.length > 0 && (
           <div className="space-y-2">
-            <p className="text-sm font-medium text-foreground">
-              Kỹ năng đã chọn ({data?.skills?.length}):
-            </p>
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium text-foreground">
+                Kỹ năng đã chọn ({data?.skills?.length}):
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={clearAllSkills}
+                className="text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
+              >
+                <Icon name="Trash2" size={14} className="mr-1" />
+                Xóa tất cả
+              </Button>
+            </div>
             <div className="flex flex-wrap gap-2">
               {data?.skills?.map((skill, index) => (
                 <div
@@ -259,9 +321,20 @@ const SkillsSelector = ({ data, onChange, errors }) => {
         {/* Selected Certifications */}
         {data?.certifications?.length > 0 && (
           <div className="space-y-2">
-            <p className="text-sm font-medium text-foreground">
-              Chứng chỉ đã chọn:
-            </p>
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium text-foreground">
+                Chứng chỉ đã chọn:
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={clearAllCertifications}
+                className="text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
+              >
+                <Icon name="Trash2" size={14} className="mr-1" />
+                Xóa tất cả
+              </Button>
+            </div>
             <div className="space-y-1">
               {data?.certifications?.map((cert, index) => (
                 <div

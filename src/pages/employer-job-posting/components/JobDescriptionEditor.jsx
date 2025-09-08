@@ -36,6 +36,56 @@ const JobDescriptionEditor = ({ data, onChange, errors }) => {
         responsibilities: '• Nghiên cứu và phân tích user behavior\n• Thiết kế wireframes, prototypes và UI mockups\n• Tạo design system và component library\n• Hợp tác chặt chẽ với team development',
         requirements: '• Tối thiểu 2 năm kinh nghiệm UI/UX Design\n• Thành thạo Figma, Sketch, Adobe Creative Suite\n• Hiểu biết về user research và usability testing\n• Có portfolio thể hiện các dự án thực tế\n• Kỹ năng giao tiếp và present ý tưởng tốt'
       }
+    },
+    {
+      value: 'mechanical-design-engineer',
+      label: 'Kỹ sư thiết kế máy',
+      description: 'Template cho vị trí kỹ sư thiết kế cơ khí',
+      template: {
+        description: 'Chúng tôi đang tìm kiếm một Kỹ sư thiết kế máy có kinh nghiệm để tham gia vào việc phát triển và cải tiến các sản phẩm cơ khí. Ứng viên sẽ làm việc trong môi trường năng động và có cơ hội phát triển nghề nghiệp trong lĩnh vực kỹ thuật cơ khí.',
+        responsibilities: '• Thiết kế và phát triển các bộ phận máy móc, thiết bị cơ khí\n• Tạo bản vẽ kỹ thuật 2D và mô hình 3D\n• Phân tích và tính toán kết cấu, chọn vật liệu phù hợp\n• Kiểm tra và đánh giá tính khả thi của thiết kế\n• Hỗ trợ quá trình sản xuất và giải quyết các vấn đề kỹ thuật\n• Cải tiến và tối ưu hóa thiết kế hiện có\n• Phối hợp với các bộ phận khác trong dự án',
+        requirements: '• Tốt nghiệp Đại học chuyên ngành Cơ khí, Cơ điện tử hoặc tương đương\n• Tối thiểu 2-3 năm kinh nghiệm thiết kế cơ khí\n• Thành thạo phần mềm CAD (AutoCAD, SolidWorks, Inventor)\n• Hiểu biết về vật liệu kỹ thuật và quy trình chế tạo\n• Có kiến thức về tiêu chuẩn kỹ thuật và quy định an toàn\n• Kỹ năng giải quyết vấn đề và tư duy logic tốt\n• Có thể đọc hiểu bản vẽ kỹ thuật và tài liệu tiếng Anh'
+      }
+    },
+    {
+      value: 'assembly-maintenance-technician',
+      label: 'Nhân viên lắp ráp bảo trì máy',
+      description: 'Template cho vị trí kỹ thuật viên lắp ráp và bảo trì',
+      template: {
+        description: 'Chúng tôi cần tuyển Nhân viên lắp ráp bảo trì máy có kỹ năng và kinh nghiệm để đảm bảo máy móc thiết bị hoạt động ổn định và hiệu quả. Đây là cơ hội tốt để phát triển kỹ năng chuyên môn trong môi trường sản xuất hiện đại.',
+        responsibilities: '• Lắp ráp máy móc, thiết bị theo bản vẽ kỹ thuật\n• Thực hiện bảo trì định kỳ và sửa chữa máy móc\n• Kiểm tra, đánh giá tình trạng hoạt động của thiết bị\n• Thay thế linh kiện, phụ tùng khi cần thiết\n• Ghi chép báo cáo tình trạng máy móc và công việc thực hiện\n• Tuân thủ quy trình an toàn lao động\n• Hỗ trợ khắc phục sự cố đột xuất\n• Tham gia đào tạo và nâng cao kỹ năng nghề nghiệp',
+        requirements: '• Tốt nghiệp Trung cấp/Cao đẳng Cơ khí, Cơ điện tử hoặc có kinh nghiệm tương đương\n• Tối thiểu 1-2 năm kinh nghiệm lắp ráp và bảo trì máy móc\n• Có kỹ năng sử dụng dụng cụ, thiết bị đo lường cơ bản\n• Đọc hiểu được bản vẽ kỹ thuật và sơ đồ mạch\n• Có tinh thần trách nhiệm và cẩn thận trong công việc\n• Khả năng làm việc ca kíp và chịu được áp lực\n• Có chứng chỉ an toàn lao động là một lợi thế\n• Sức khỏe tốt, không có các bệnh nghề nghiệp'
+      }
+    },
+    {
+      value: 'welder',
+      label: 'Thợ hàn',
+      description: 'Template cho vị trí thợ hàn chuyên nghiệp',
+      template: {
+        description: 'Chúng tôi đang tuyển dụng Thợ hàn có tay nghề cao để tham gia vào các dự án sản xuất và gia công kim loại. Ứng viên sẽ được làm việc với các thiết bị hiện đại và có cơ hội phát triển kỹ năng trong môi trường chuyên nghiệp.',
+        responsibilities: '• Thực hiện các công việc hàn theo bản vẽ kỹ thuật\n• Hàn các loại vật liệu: thép carbon, thép không gỉ, nhôm\n• Chuẩn bị mặt bích, làm sạch và xử lý bề mặt trước khi hàn\n• Kiểm tra chất lượng đường hàn và khắc phục các khuyết tật\n• Bảo dưỡng và vệ sinh thiết bị hàn\n• Tuân thủ nghiêm ngặt các quy định về an toàn lao động\n• Báo cáo tiến độ công việc và các vấn đề phát sinh\n• Tham gia đào tạo nâng cao kỹ năng hàn',
+        requirements: '• Tốt nghiệp Trung cấp nghề Hàn hoặc có kinh nghiệm tương đương\n• Tối thiểu 2 năm kinh nghiệm hàn trong môi trường công nghiệp\n• Thành thạo các phương pháp hàn: GMAW, SMAW, TIG, MAG\n• Có chứng chỉ thợ hàn theo tiêu chuẩn quốc gia/quốc tế\n• Đọc hiểu được bản vẽ hàn và ký hiệu hàn\n• Có kỹ năng sử dụng các thiết bị đo lường cơ bản\n• Sức khỏe tốt, thị lực bình thường\n• Có tinh thần trách nhiệm và tác phong công nghiệp tốt\n• Ưu tiên ứng viên có kinh nghiệm hàn kết cấu thép, đường ống'
+      }
+    },
+    {
+      value: 'cnc-machinist',
+      label: 'Thợ đứng máy gia công cơ',
+      description: 'Template cho vị trí vận hành máy gia công cơ khí',
+      template: {
+        description: 'Chúng tôi cần tuyển Thợ đứng máy gia công cơ có kinh nghiệm để vận hành các máy gia công trong sản xuất. Ứng viên sẽ làm việc với các máy móc hiện đại và có cơ hội phát triển kỹ năng chuyên môn cao.',
+        responsibilities: '• Vận hành máy tiện, máy phay, máy mài và các máy gia công khác\n• Cài đặt thông số gia công theo bản vẽ kỹ thuật\n• Kiểm tra kích thước và chất lượng sản phẩm gia công\n• Thay dao cắt và điều chỉnh tốc độ cắt phù hợp\n• Bảo dưỡng và vệ sinh máy móc thiết bị\n• Ghi chép nhật ký vận hành và báo cáo sự cố\n• Tuân thủ quy trình an toàn lao động\n• Đảm bảo năng suất và chất lượng theo yêu cầu',
+        requirements: '• Tốt nghiệp Trung cấp/Cao đẳng Cơ khí hoặc có kinh nghiệm tương đương\n• Tối thiểu 1-3 năm kinh nghiệm vận hành máy gia công cơ khí\n• Thành thạo sử dụng các dụng cụ đo lường: thước cặp, panme, đồng hồ so\n• Đọc hiểu được bản vẽ kỹ thuật và dung sai gia công\n• Có kiến thức về vật liệu và dao cắt\n• Khả năng tính toán tốc độ cắt và lượng chạy dao\n• Cẩn thận, tỉ mỉ và có tinh thần trách nhiệm cao\n• Sức khỏe tốt, có thể làm việc ca kíp\n• Ưu tiên ứng viên có kinh nghiệm với máy CNC'
+      }
+    },
+    {
+      value: 'cnc-programmer',
+      label: 'Lập trình CNC',
+      description: 'Template cho vị trí lập trình viên CNC',
+      template: {
+        description: 'Chúng tôi đang tìm kiếm Lập trình viên CNC có kỹ năng và kinh nghiệm để tham gia vào việc lập trình và tối ưu hóa quy trình gia công. Đây là cơ hội để làm việc với công nghệ tiên tiến và phát triển chuyên môn trong lĩnh vực gia công CNC.',
+        responsibilities: '• Lập trình CNC cho máy tiện, máy phay và máy gia công phức tạp\n• Phân tích bản vẽ kỹ thuật và lựa chọn phương pháp gia công tối ưu\n• Tạo và chỉnh sửa chương trình G-code, M-code\n• Mô phỏng và kiểm tra chương trình CNC trước khi gia công thực tế\n• Tối ưu hóa thời gian gia công và chất lượng sản phẩm\n• Hướng dẫn thợ máy vận hành và khắc phục sự cố\n• Cập nhật và cải tiến quy trình gia công\n• Tạo tài liệu kỹ thuật và hướng dẫn vận hành',
+        requirements: '• Tốt nghiệp Cao đẳng/Đại học Cơ khí, Cơ điện tử hoặc tương đương\n• Tối thiểu 2-4 năm kinh nghiệm lập trình CNC\n• Thành thạo phần mềm CAM: Mastercam, PowerMill, EdgeCAM hoặc tương đương\n• Hiểu biết sâu về G-code, M-code và các hệ điều khiển CNC (Fanuc, Siemens, Mitsubishi)\n• Có kiến thức về dao cắt, vật liệu và thông số gia công\n• Kỹ năng đọc hiểu bản vẽ kỹ thuật và dung sai chính xác\n• Tư duy logic tốt và khả năng giải quyết vấn đề phức tạp\n• Kỹ năng giao tiếp và làm việc nhóm hiệu quả\n• Ưu tiên ứng viên có kinh nghiệm với máy 5 trục và gia công phức tạp'
+      }
     }
   ];
 
