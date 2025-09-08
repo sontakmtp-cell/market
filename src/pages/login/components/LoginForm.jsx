@@ -1,111 +1,80 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import Button from '../../../components/ui/Button';
 import Input from '../../../components/ui/Input';
 import { Checkbox } from '../../../components/ui/Checkbox';
 import Icon from '../../../components/AppIcon';
+import { useSupabase } from '../../../contexts/SupabaseContext';
 
 const LoginForm = ({ onLanguageChange, currentLanguage }) => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { signInWithPassword, signInWithProvider } = useSupabase();
+
   const [formData, setFormData] = useState({
     email: '',
     password: '',
-    rememberMe: false
+    rememberMe: false,
   });
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
 
-  // Mock credentials for different user types
-  const mockCredentials = {
-    freelancer: { email: "freelancer@techmarket.vn", password: "freelancer123" },
-    client: { email: "client@techmarket.vn", password: "client123" },
-    employer: { email: "employer@techmarket.vn", password: "employer123" }
-  };
+  const redirectTo = location.state?.from?.pathname || '/freelancer-dashboard';
 
   const validateForm = () => {
     const newErrors = {};
-    
-    if (!formData?.email) {
+    if (!formData.email) {
       newErrors.email = currentLanguage === 'vi' ? 'Vui lòng nhập email' : 'Please enter email';
-    } else if (!/\S+@\S+\.\S+/?.test(formData?.email)) {
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = currentLanguage === 'vi' ? 'Email không hợp lệ' : 'Invalid email format';
     }
-    
-    if (!formData?.password) {
+    if (!formData.password) {
       newErrors.password = currentLanguage === 'vi' ? 'Vui lòng nhập mật khẩu' : 'Please enter password';
-    } else if (formData?.password?.length < 6) {
-      newErrors.password = currentLanguage === 'vi' ? 'Mật khẩu phải có ít nhất 6 ký tự' : 'Password must be at least 6 characters';
+    } else if (formData.password.length < 6) {
+      newErrors.password = currentLanguage === 'vi' ? 'Mật khẩu tối thiểu 6 ký tự' : 'Password must be at least 6 characters';
     }
-    
     setErrors(newErrors);
-    return Object.keys(newErrors)?.length === 0;
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleInputChange = (e) => {
-    const { name, value, type, checked } = e?.target;
-    setFormData(prev => ({
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: type === 'checkbox' ? checked : value,
     }));
-    
-    // Clear error when user starts typing
-    if (errors?.[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }));
-    }
+    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: '' }));
   };
 
   const handleSubmit = async (e) => {
-    e?.preventDefault();
-    
+    e.preventDefault();
     if (!validateForm()) return;
-    
     setIsLoading(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      // Check credentials against mock data
-      const userType = Object.keys(mockCredentials)?.find(type => 
-        mockCredentials?.[type]?.email === formData?.email && 
-        mockCredentials?.[type]?.password === formData?.password
-      );
-      
-      if (userType) {
-        // Store auth data
-        localStorage.setItem('authToken', 'mock-jwt-token-' + Date.now());
-        localStorage.setItem('userRole', userType);
-        localStorage.setItem('userEmail', formData?.email);
-        
-        if (formData?.rememberMe) {
-          localStorage.setItem('rememberLogin', 'true');
-        }
-        
-        // Redirect based on user type
-        if (userType === 'freelancer') {
-          navigate('/freelancer-dashboard');
-        } else {
-          navigate('/homepage');
-        }
+    try {
+      const { error } = await signInWithPassword(formData.email, formData.password);
+      if (error) {
+        setErrors({ general: currentLanguage === 'vi' ? 'Email hoặc mật khẩu không đúng.' : 'Invalid email or password.' });
       } else {
-        setErrors({
-          general: currentLanguage === 'vi' ?'Email hoặc mật khẩu không đúng. Vui lòng thử lại với thông tin đăng nhập mẫu.' :'Invalid email or password. Please try with sample credentials.'
-        });
+        if (formData.rememberMe) localStorage.setItem('rememberLogin', 'true');
+        navigate(redirectTo, { replace: true });
       }
-      
+    } catch (err) {
+      setErrors({ general: err?.message || 'Login failed' });
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
 
-  const handleSocialLogin = (provider) => {
+  const handleSocialLogin = async (provider) => {
     setIsLoading(true);
-    // Simulate social login
-    setTimeout(() => {
-      localStorage.setItem('authToken', 'mock-social-token-' + Date.now());
-      localStorage.setItem('userRole', 'freelancer');
-      navigate('/freelancer-dashboard');
-    }, 1000);
+    try {
+      const { error } = await signInWithProvider(provider, {
+        redirectTo: window.location.origin + redirectTo,
+      });
+      if (error) setErrors({ general: error.message });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -120,17 +89,16 @@ const LoginForm = ({ onLanguageChange, currentLanguage }) => {
             {currentLanguage === 'vi' ? 'Đăng nhập' : 'Sign In'}
           </h1>
           <p className="text-muted-foreground">
-            {currentLanguage === 'vi' ?'Truy cập vào nền tảng dịch vụ kỹ thuật của bạn' :'Access your technical services platform'
-            }
+            {currentLanguage === 'vi' ? 'Truy cập vào nền tảng dịch vụ kỹ thuật của bạn' : 'Access your technical services platform'}
           </p>
         </div>
 
         {/* General Error */}
-        {errors?.general && (
+        {errors.general && (
           <div className="mb-6 p-4 bg-error/10 border border-error/20 rounded-lg">
             <div className="flex items-center space-x-2">
               <Icon name="AlertCircle" size={16} className="text-error" />
-              <p className="text-sm text-error">{errors?.general}</p>
+              <p className="text-sm text-error">{errors.general}</p>
             </div>
           </div>
         )}
@@ -141,10 +109,10 @@ const LoginForm = ({ onLanguageChange, currentLanguage }) => {
             label={currentLanguage === 'vi' ? 'Email' : 'Email Address'}
             type="email"
             name="email"
-            value={formData?.email}
+            value={formData.email}
             onChange={handleInputChange}
             placeholder={currentLanguage === 'vi' ? 'Nhập email của bạn' : 'Enter your email'}
-            error={errors?.email}
+            error={errors.email}
             required
             disabled={isLoading}
           />
@@ -153,10 +121,10 @@ const LoginForm = ({ onLanguageChange, currentLanguage }) => {
             label={currentLanguage === 'vi' ? 'Mật khẩu' : 'Password'}
             type="password"
             name="password"
-            value={formData?.password}
+            value={formData.password}
             onChange={handleInputChange}
             placeholder={currentLanguage === 'vi' ? 'Nhập mật khẩu' : 'Enter your password'}
-            error={errors?.password}
+            error={errors.password}
             required
             disabled={isLoading}
           />
@@ -165,11 +133,11 @@ const LoginForm = ({ onLanguageChange, currentLanguage }) => {
             <Checkbox
               label={currentLanguage === 'vi' ? 'Ghi nhớ đăng nhập' : 'Remember me'}
               name="rememberMe"
-              checked={formData?.rememberMe}
+              checked={formData.rememberMe}
               onChange={handleInputChange}
               disabled={isLoading}
             />
-            
+
             <button
               type="button"
               className="text-sm text-primary hover:text-primary/80 transition-smooth"
@@ -212,7 +180,7 @@ const LoginForm = ({ onLanguageChange, currentLanguage }) => {
           >
             {currentLanguage === 'vi' ? 'Tiếp tục với Google' : 'Continue with Google'}
           </Button>
-          
+
           <Button
             variant="outline"
             fullWidth
@@ -244,3 +212,4 @@ const LoginForm = ({ onLanguageChange, currentLanguage }) => {
 };
 
 export default LoginForm;
+

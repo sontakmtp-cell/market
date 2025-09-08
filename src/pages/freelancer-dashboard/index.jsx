@@ -18,11 +18,13 @@ import PaymentManagement from './components/PaymentManagement';
 import { ROLES } from '../../utils/constants';
 
 const FreelancerDashboard = () => {
+  console.log('FreelancerDashboard component rendering...');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [userRole, setUserRole] = useState('freelancer'); // freelancer or client
 
   useEffect(() => {
+    console.log('FreelancerDashboard useEffect running...');
     const timer = setInterval(() => {
       setCurrentTime(new Date());
     }, 60000); // Update every minute

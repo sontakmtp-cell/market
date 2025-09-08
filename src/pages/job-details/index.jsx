@@ -10,16 +10,18 @@ import ProjectSidebar from './components/ProjectSidebar';
 import ProposalForm from './components/ProposalForm';
 import ExistingProposals from './components/ExistingProposals';
 import { getProjectById } from '../../utils/dataStore';
+import { useAuth } from '../../hooks/useAuth';
+import LoginPrompt from '../../components/LoginPrompt';
 
 const JobDetails = () => {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { isAuthenticated, redirectToLogin } = useAuth();
   const [project, setProject] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaved, setIsSaved] = useState(false);
   const [activeSection, setActiveSection] = useState('details');
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   // Mock project data
   const mockProject = {
@@ -223,10 +225,6 @@ const JobDetails = () => {
   ];
 
   useEffect(() => {
-    // Check authentication
-    const token = localStorage.getItem('authToken');
-    setIsAuthenticated(!!token);
-
     // Get project ID from query params or URL params
     const projectId = searchParams.get('id') || id;
 
@@ -259,10 +257,12 @@ const JobDetails = () => {
       setIsLoading(false);
     }, 500);
 
-    // Check if job is saved
-    const savedJobs = JSON.parse(localStorage.getItem('savedJobs') || '[]');
-    setIsSaved(savedJobs?.includes(projectId || 'proj-001'));
-  }, [id, searchParams]);
+    // Check if job is saved (only if authenticated)
+    if (isAuthenticated) {
+      const savedJobs = JSON.parse(localStorage.getItem('savedJobs') || '[]');
+      setIsSaved(savedJobs?.includes(projectId || 'proj-001'));
+    }
+  }, [id, searchParams, isAuthenticated]);
 
   // Helper function to calculate time ago
   const getTimeAgo = (dateString) => {
@@ -289,6 +289,11 @@ const JobDetails = () => {
   };
 
   const handleSaveJob = () => {
+    if (!isAuthenticated) {
+      redirectToLogin();
+      return;
+    }
+
     const savedJobs = JSON.parse(localStorage.getItem('savedJobs') || '[]');
     if (isSaved) {
       const updatedJobs = savedJobs?.filter(jobId => jobId !== id);
@@ -303,7 +308,7 @@ const JobDetails = () => {
 
   const handleSubmitProposal = async (proposalData) => {
     if (!isAuthenticated) {
-      navigate('/login');
+      redirectToLogin();
       return;
     }
 
@@ -396,19 +401,29 @@ const JobDetails = () => {
                 <div className="flex overflow-x-auto">
                   {[
                     { id: 'details', label: 'Chi tiết dự án', icon: 'FileText' },
-                    { id: 'proposals', label: 'Đề xuất hiện tại', icon: 'Users' },
-                    { id: 'submit', label: 'Gửi đề xuất', icon: 'Send' }
+                    { id: 'proposals', label: 'Đề xuất hiện tại', icon: 'Users', requiresAuth: false },
+                    { id: 'submit', label: 'Gửi đề xuất', icon: 'Send', requiresAuth: true }
                   ]?.map((section) => (
                     <button
                       key={section?.id}
-                      onClick={() => setActiveSection(section?.id)}
+                      onClick={() => {
+                        if (section.requiresAuth && !isAuthenticated) {
+                          redirectToLogin();
+                          return;
+                        }
+                        setActiveSection(section?.id);
+                      }}
+                      disabled={section.requiresAuth && !isAuthenticated}
                       className={`flex items-center gap-2 px-4 py-2 text-sm font-medium whitespace-nowrap rounded-md transition-colors ${
                         activeSection === section?.id
                           ? 'bg-primary text-primary-foreground'
+                          : section.requiresAuth && !isAuthenticated
+                          ? 'text-muted-foreground/50 cursor-not-allowed'
                           : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                       }`}
+                      title={section.requiresAuth && !isAuthenticated ? 'Đăng nhập để sử dụng tính năng này' : ''}
                     >
-                      <Icon name={section?.icon} size={16} />
+                      <Icon name={section.requiresAuth && !isAuthenticated ? 'Lock' : section?.icon} size={16} />
                       <span>{section?.label}</span>
                     </button>
                   ))}
@@ -425,7 +440,17 @@ const JobDetails = () => {
               )}
 
               {activeSection === 'submit' && (
-                <ProposalForm onSubmitProposal={handleSubmitProposal} />
+                isAuthenticated ? (
+                  <ProposalForm onSubmitProposal={handleSubmitProposal} />
+                ) : (
+                  <div className="bg-card border border-border rounded-lg p-6">
+                    <LoginPrompt 
+                      title="Đăng nhập để gửi đề xuất"
+                      message="Bạn cần có tài khoản để gửi đề xuất cho dự án này"
+                      size="lg"
+                    />
+                  </div>
+                )
               )}
             </div>
 

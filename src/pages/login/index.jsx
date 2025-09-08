@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useSupabase } from '../../contexts/SupabaseContext';
 import LoginForm from './components/LoginForm';
 import RoleIndicator from './components/RoleIndicator';
 import LanguageToggle from './components/LanguageToggle';
@@ -7,18 +8,13 @@ import LoginBackground from './components/LoginBackground';
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const { user, loading } = useSupabase();
   const [currentLanguage, setCurrentLanguage] = useState('vi');
 
   useEffect(() => {
-    // Check if user is already authenticated
-    const token = localStorage.getItem('authToken');
-    if (token) {
-      const userRole = localStorage.getItem('userRole');
-      if (userRole === 'freelancer') {
-        navigate('/freelancer-dashboard');
-      } else {
-        navigate('/homepage');
-      }
+    // Redirect if already authenticated via Supabase
+    if (!loading && user) {
+      navigate('/freelancer-dashboard');
       return;
     }
 

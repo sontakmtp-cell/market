@@ -10,45 +10,56 @@ import ExperienceSection from './ExperienceSection';
 import EducationSection from './EducationSection';
 import PortfolioSection from './PortfolioSection';
 import CertificationsSection from './CertificationsSection';
+import { useSupabase } from '../../../contexts/SupabaseContext';
 
 const PublicProfile = () => {
   const { username } = useParams();
   const navigate = useNavigate();
-  const { basicInfo, roleProfiles } = useProfileStore();
+  const { basicInfo, roleProfiles, experience, education, portfolio, certifications } = useProfileStore();
   const [activeRole, setActiveRole] = useState(null);
   const [availableRoles, setAvailableRoles] = useState([]);
   const [activeTab, setActiveTab] = useState('overview');
+
+  const { user, loading } = useSupabase();
+  const usernameFromAuth = (user?.user_metadata?.username || user?.email?.split('@')[0] || 'user')?.toString();
+  const isSelfView = !!username && !!user && username === usernameFromAuth;
 
   // Handle case where no username in URL (e.g., /profile/user)
   const currentUsername = username || 'current-user';
 
   // In a real app, you would fetch the profile data here
   useEffect(() => {
-    // If no username, show current user's profile (if logged in)
+    // If no username, require logged-in user via Supabase
     if (!username) {
-      // Check if user is logged in
-      const authToken = localStorage.getItem('authToken');
-      if (!authToken) {
-        // Redirect to login if not authenticated and no username
+      if (!loading && !user) {
         navigate('/login');
         return;
       }
+      if (loading) return; // wait until auth resolves
     }
 
     // Simulate profile data fetch
-    // If no username (current user), show all roles regardless of isPublic
-    // If username provided, only show public roles
-    const publicRoles = username 
-      ? Object.entries(roleProfiles)
-          .filter(([, profile]) => profile.isPublic)
-          .map(([role]) => role)
-      : Object.keys(roleProfiles); // Show all roles for current user
+    const publicRoles = username
+      ? (isSelfView
+          ? Object.keys(roleProfiles)
+          : Object.entries(roleProfiles)
+              .filter(([, profile]) => profile.isPublic)
+              .map(([role]) => role))
+      : Object.keys(roleProfiles);
 
     setAvailableRoles(publicRoles);
     if (publicRoles.length > 0) {
       setActiveRole(publicRoles[0]);
     }
-  }, [roleProfiles, username, navigate]);
+  }, [roleProfiles, username, navigate, user, loading, isSelfView]);
+
+  // If no username but logged in, redirect to slugged username
+  useEffect(() => {
+    if (!username && !loading && user) {
+      const fallback = (user.user_metadata?.username || user.email?.split('@')[0] || 'user').toString();
+      navigate(`/profile/${fallback}`, { replace: true });
+    }
+  }, [username, user, loading, navigate]);
 
   // Track profile view for analytics
   useEffect(() => {
@@ -135,13 +146,13 @@ const PublicProfile = () => {
         );
 
       case 'experience':
-        return <ExperienceSection experiences={roleProfiles.experience || []} />;
+        return <ExperienceSection experiences={experience || []} />;
 
       case 'education':
-        return <EducationSection education={roleProfiles.education || []} />;
+        return <EducationSection education={education || []} />;
 
       case 'portfolio':
-        return <PortfolioSection portfolio={roleProfiles.portfolio || []} />;
+        return <PortfolioSection portfolio={portfolio || []} />;
 
       case 'reviews':
         return (
@@ -152,7 +163,7 @@ const PublicProfile = () => {
         );
 
       case 'attachments':
-        return <CertificationsSection certifications={roleProfiles.certifications || []} />;
+        return <CertificationsSection certifications={certifications || []} />;
 
       case 'jobs':
         return (
@@ -214,7 +225,7 @@ const PublicProfile = () => {
 
       <ProfileHeader
         basicInfo={basicInfo}
-        activeRole={ROLE_CONFIG[activeRole]?.title}
+        activeRole={activeRole}
         profileData={profileData}
         username={currentUsername}
         roleProfile={currentProfile}
@@ -272,3 +283,4 @@ const PublicProfile = () => {
 };
 
 export default PublicProfile;
+

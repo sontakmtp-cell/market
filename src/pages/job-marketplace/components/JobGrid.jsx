@@ -2,6 +2,8 @@ import React from 'react';
 import JobCard from './JobCard';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
+import { useAuth } from '../../../hooks/useAuth';
+import { Link } from 'react-router-dom';
 
 const JobGrid = ({ 
   jobs = [], 
@@ -11,6 +13,7 @@ const JobGrid = ({
   onLoadMore,
   hasMore = false
 }) => {
+  const { isAuthenticated, redirectToLogin } = useAuth();
   if (loading && jobs?.length === 0) {
     return (
       <div className="flex-1 p-6">
@@ -85,10 +88,23 @@ const JobGrid = ({
               Xóa tất cả bộ lọc
             </Button>
             {userRole === 'client' && (
-              <Button variant="default" fullWidth>
-                <Icon name="Plus" size={16} className="mr-2" />
-                Đăng công việc mới
-              </Button>
+              isAuthenticated ? (
+                <Link to="/employer-job-posting">
+                  <Button variant="default" fullWidth>
+                    <Icon name="Plus" size={16} className="mr-2" />
+                    Đăng công việc mới
+                  </Button>
+                </Link>
+              ) : (
+                <Button 
+                  variant="default" 
+                  fullWidth
+                  onClick={redirectToLogin}
+                >
+                  <Icon name="LogIn" size={16} className="mr-2" />
+                  Đăng nhập để đăng công việc
+                </Button>
+              )
             )}
           </div>
         </div>

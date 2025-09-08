@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
+import { useAuth } from '../../../hooks/useAuth';
 
 const formatSalary = (min, max, currency = 'VND') => {
   if (!min && !max) return 'Negotiable';
@@ -18,6 +19,7 @@ const daysLeft = (deadline) => {
 };
 
 const RecruitmentJobCard = ({ job }) => {
+  const { isAuthenticated, redirectToLogin } = useAuth();
   const left = daysLeft(job.deadline);
   return (
     <div className="bg-card border border-border rounded-lg p-6 hover:shadow-elevation-2 transition-smooth">
@@ -70,11 +72,22 @@ const RecruitmentJobCard = ({ job }) => {
           )}
         </div>
         <div className="flex items-center space-x-2">
-          <Link to={`/cv-submission-portal?jobId=${job.id}`}>
-            <Button variant="default" size="sm" iconName="Send" iconPosition="left">
-              Apply Now
+          {isAuthenticated ? (
+            <Link to={`/cv-submission-portal?jobId=${job.id}`}>
+              <Button variant="default" size="sm" iconName="Send" iconPosition="left">
+                Apply Now
+              </Button>
+            </Link>
+          ) : (
+            <Button 
+              variant="default" 
+              size="sm"
+              onClick={redirectToLogin}
+            >
+              <Icon name="LogIn" size={14} className="mr-1" />
+              Đăng nhập để ứng tuyển
             </Button>
-          </Link>
+          )}
         </div>
       </div>
     </div>

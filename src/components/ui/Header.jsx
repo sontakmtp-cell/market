@@ -1,20 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import Icon from '../AppIcon';
 import Button from './Button';
+import { useSupabase } from '../../contexts/SupabaseContext';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [userRole, setUserRole] = useState('freelancer');
+  const { user, signOut } = useSupabase();
   const location = useLocation();
 
-  useEffect(() => {
-    const token = localStorage.getItem('authToken');
-    const role = localStorage.getItem('userRole') || 'freelancer';
-    setIsAuthenticated(!!token);
-    setUserRole(role);
-  }, []);
+  const isAuthenticated = !!user;
+  const userRole = user?.user_metadata?.role || 'freelancer';
+  const usernameSlug = (user?.user_metadata?.username || user?.email?.split("@")[0] || 'user').toString();
+  const publicProfilePath = `/profile/${usernameSlug}`;
+
 
   const navigationItems = [
     {
@@ -51,11 +50,8 @@ const Header = () => {
     return location?.pathname === path || location?.pathname?.startsWith(path + '/');
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('userRole');
-    setIsAuthenticated(false);
-    window.location.href = '/login';
+  const handleLogout = async () => {
+    try { await signOut(); } finally { window.location.href = '/login'; }
   };
 
   const toggleMenu = () => {
@@ -128,7 +124,7 @@ const Header = () => {
                         <div className="text-xs capitalize">{userRole}</div>
                       </div>
                       <Link
-                        to="/profile/user"
+                        to={publicProfilePath}
                         className="flex items-center space-x-2 px-4 py-2 text-sm text-foreground hover:bg-muted transition-smooth"
                       >
                         <Icon name="Eye" size={14} />
@@ -227,7 +223,7 @@ const Header = () => {
                     <div className="text-xs capitalize">{userRole}</div>
                   </div>
                   <Link
-                    to="/profile/user"
+                    to={publicProfilePath}
                     onClick={() => setIsMenuOpen(false)}
                     className="flex items-center space-x-3 px-4 py-3 rounded-lg text-foreground hover:bg-muted transition-smooth"
                   >
@@ -280,3 +276,5 @@ const Header = () => {
 };
 
 export default Header;
+
+

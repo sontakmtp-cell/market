@@ -2,7 +2,7 @@ import React from 'react';
 import { useParams } from 'react-router-dom';
 import { MessageCircle, UserPlus, Star, MoreHorizontal, CheckCircle2 } from 'lucide-react';
 import useProfileStore from '../../../utils/profileStore';
-import { VISIBILITY_OPTIONS, ROLES } from '../../../utils/constants';
+import { VISIBILITY_OPTIONS, ROLES, ROLE_CONFIG } from '../../../utils/constants';
 import Button from '../../../components/ui/Button';
 import ShareProfile from './ShareProfile';
 import ProfileStats from './ProfileStats';
@@ -158,7 +158,7 @@ const ProfileHeader = ({ basicInfo, activeRole, profileData, username, roleProfi
                 </h1>
                 {activeRole && (
                   <span className="inline-flex items-center rounded-full bg-primary/10 px-2 py-1 text-xs font-medium text-primary">
-                    {activeRole}
+                    {ROLE_CONFIG[activeRole]?.title || activeRole}
                   </span>
                 )}
                 {availabilityStatus && (
