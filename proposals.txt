@@ -1,0 +1,12 @@
+create table public.proposals (
+  id uuid not null default gen_random_uuid (),
+  project_id text not null,
+  freelancer_id uuid null,
+  bid_amount numeric not null,
+  timeline text null,
+  cover_letter text null,
+  status text not null default 'submitted'::text,
+  created_at timestamp with time zone not null default now(),
+  constraint proposals_pkey primary key (id),
+  constraint proposals_freelancer_id_fkey foreign KEY (freelancer_id) references auth.users (id) on delete CASCADE
+) TABLESPACE pg_default;

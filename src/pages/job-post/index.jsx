@@ -4,6 +4,7 @@ import Header from '../../components/ui/Header';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Select from '../../components/ui/Select';
+import FileUpload from '../../components/ui/FileUpload';
 import { saveProject, getProjectById } from '../../utils/dataStore';
 import { useSupabase } from '../../contexts/SupabaseContext';
 
@@ -224,19 +225,10 @@ const JobPost = () => {
     }));
   };
 
-  const handleFileUpload = (event) => {
-    const files = Array.from(event.target.files);
-    const newDocuments = files.map(file => ({
-      id: Date.now() + Math.random(),
-      name: file.name,
-      size: file.size,
-      type: file.type,
-      file: file
-    }));
-
+  const handleFilesUploaded = (uploadedFiles) => {
     setFormData(prev => ({
       ...prev,
-      referenceDocuments: [...prev.referenceDocuments, ...newDocuments]
+      referenceDocuments: [...prev.referenceDocuments, ...uploadedFiles]
     }));
   };
 
@@ -245,14 +237,6 @@ const JobPost = () => {
       ...prev,
       referenceDocuments: prev.referenceDocuments.filter(doc => doc.id !== docId)
     }));
-  };
-
-  const formatFileSize = (bytes) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
   const validateForm = () => {
@@ -329,9 +313,9 @@ const JobPost = () => {
           id: doc.id,
           name: doc.name,
           size: doc.size,
-          type: doc.type
-          // Note: In a real app, you would upload the file to a server here
-          // and store the URL instead of the file object
+          type: doc.type,
+          url: doc.url || null, // Store the Supabase URL
+          uploadedAt: doc.uploadedAt || new Date().toISOString()
         }))
       };
 
@@ -642,86 +626,38 @@ const JobPost = () => {
               </Button>
             </section>
 
-            {/* Reference Documents */}
             <section>
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Tài liệu tham khảo</h2>
-              <div className="space-y-4">
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors">
-                  <div className="space-y-2">
-                    <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
-                      <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                    <div className="text-gray-600">
-                      <label htmlFor="file-upload" className="cursor-pointer">
-                        <span className="text-blue-600 hover:text-blue-500 font-medium">Tải lên tài liệu</span>
-                        <span> hoặc kéo thả tệp vào đây</span>
-                      </label>
-                      <input
-                        id="file-upload"
-                        name="file-upload"
-                        type="file"
-                        multiple
-                        accept=".pdf,.doc,.docx,.dwg,.jpg,.jpeg,.png,.zip,.rar"
-                        className="sr-only"
-                        onChange={handleFileUpload}
-                      />
-                    </div>
-                    <p className="text-xs text-gray-500">
-                      Hỗ trợ: PDF, DOC, DOCX, DWG, JPG, PNG, ZIP, RAR (tối đa 10MB mỗi file)
-                    </p>
-                  </div>
-                </div>
+              <FileUpload
+                type="multiple"
+                accept={{
+                  'application/pdf': ['.pdf'],
+                  'application/msword': ['.doc'],
+                  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+                  'image/jpeg': ['.jpg', '.jpeg'],
+                  'image/png': ['.png'],
+                  'application/zip': ['.zip'],
+                  'application/x-rar-compressed': ['.rar'],
+                  'application/octet-stream': ['.dwg']
+                }}
+                maxSize={10 * 1024 * 1024} // 10MB
+                multiple={true}
+                bucket="job-attachments"
+                placeholder="Tải lên tài liệu tham khảo"
+                files={formData.referenceDocuments}
+                onFilesUploaded={handleFilesUploaded}
+                onRemoveFile={removeDocument}
+              />
 
-                {formData.referenceDocuments.length > 0 && (
-                  <div className="space-y-2">
-                    <h3 className="text-sm font-medium text-gray-700">Tài liệu đã tải lên:</h3>
-                    {formData.referenceDocuments.map((doc) => (
-                      <div key={doc.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
-                        <div className="flex items-center space-x-3">
-                          <div className="flex-shrink-0">
-                            {doc.type.includes('image') ? (
-                              <svg className="h-8 w-8 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                              </svg>
-                            ) : doc.type.includes('pdf') ? (
-                              <svg className="h-8 w-8 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                              </svg>
-                            ) : (
-                              <svg className="h-8 w-8 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                              </svg>
-                            )}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-gray-900 truncate">{doc.name}</p>
-                            <p className="text-xs text-gray-500">{formatFileSize(doc.size)}</p>
-                          </div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => removeDocument(doc.id)}
-                          className="flex-shrink-0 text-red-400 hover:text-red-600 p-1"
-                        >
-                          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                <div className="text-sm text-gray-600">
-                  <p><strong>Gợi ý tài liệu tham khảo:</strong></p>
-                  <ul className="list-disc list-inside space-y-1 mt-2">
-                    <li>Bản vẽ thiết kế có sẵn hoặc ý tưởng ban đầu</li>
-                    <li>Tài liệu kỹ thuật, tiêu chuẩn áp dụng</li>
-                    <li>Hình ảnh minh họa dự án tương tự</li>
-                    <li>Báo cáo khảo sát hiện trạng</li>
-                    <li>Danh sách thiết bị, vật tư có sẵn</li>
-                  </ul>
-                </div>
+              <div className="mt-4 text-sm text-gray-600">
+                <p><strong>Gợi ý tài liệu tham khảo:</strong></p>
+                <ul className="list-disc list-inside space-y-1 mt-2">
+                  <li>Bản vẽ thiết kế có sẵn hoặc ý tưởng ban đầu</li>
+                  <li>Tài liệu kỹ thuật, tiêu chuẩn áp dụng</li>
+                  <li>Hình ảnh minh họa dự án tương tự</li>
+                  <li>Báo cáo khảo sát hiện trạng</li>
+                  <li>Danh sách thiết bị, vật tư có sẵn</li>
+                </ul>
               </div>
             </section>
 
