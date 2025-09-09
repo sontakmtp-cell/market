@@ -280,6 +280,7 @@ const JobPost = () => {
 
       const savedProject = await saveProject(cleanData);
       if (savedProject?.id) {
+        alert('Dự án đã được đăng thành công!');
         navigate(`/job-details?id=${savedProject.id}`);
       } else {
         console.error('Project was not saved or missing id:', savedProject);
@@ -287,7 +288,17 @@ const JobPost = () => {
       }
     } catch (error) {
       console.error('Error saving project:', error);
-      alert('Có lỗi xảy ra khi đăng dự án. Vui lòng thử lại.');
+      
+      // Handle specific error types
+      if (error.message.includes('Authentication required')) {
+        alert('Bạn cần đăng nhập để đăng dự án. Vui lòng đăng nhập và thử lại.');
+        navigate('/login');
+      } else if (error.message.includes('Row Level Security')) {
+        alert('Lỗi quyền truy cập. Vui lòng đăng nhập lại và thử lại.');
+        navigate('/login');
+      } else {
+        alert(`Có lỗi xảy ra khi đăng dự án: ${error.message}`);
+      }
     }
   };
 

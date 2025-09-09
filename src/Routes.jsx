@@ -19,7 +19,7 @@ import ProfileManage from './pages/profile-manage';
 import ProfileManageGuard from './guards/ProfileManageGuard';
 import AuthGuard from './guards/AuthGuard';
 import SimpleProfileManage from './pages/profile-manage/simple';
-import { useSupabase } from './contexts/SupabaseContext';
+import AuthTest from './components/AuthTest';
 
 // Test component to check Supabase
 const TestComponent = () => {
@@ -89,6 +89,7 @@ const Routes = () => {
           </ProfileManageGuard>
         } />
         <Route path="/profile/:username" element={<PublicProfile />} />
+        <Route path="/auth-test" element={<AuthTest />} />
         <Route path="*" element={<NotFound />} />
       </RouterRoutes>
       </ErrorBoundary>
