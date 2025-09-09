@@ -157,44 +157,54 @@ const JobMarketplace = () => {
   const [hasMore, setHasMore] = useState(false);
 
   useEffect(() => {
-    // Get user role from localStorage or URL params
-    const role = localStorage.getItem('userRole') || 'freelancer';
-    setUserRole(role);
+    const fetchProjects = async () => {
+      // Get user role from localStorage or URL params
+      const role = localStorage.getItem('userRole') || 'freelancer';
+      setUserRole(role);
 
-    // Simulate loading
-    setTimeout(() => {
-      // Get projects from localStorage and convert to job format
-      const storedProjects = getProjects();
-      const convertedProjects = storedProjects.map(project => ({
-        id: project.id,
-        title: project.title,
-        category: project.category,
-        description: project.fullDescription || project.shortDescription,
-        shortDescription: project.shortDescription,
-        budgetMin: project.budgetMin,
-        budgetMax: project.budgetMax,
-        deadline: new Date(project.deadline),
-        skills: project.skills || [],
-        isUrgent: project.isUrgent,
-        client: {
-          name: project.client?.name || 'Khách hàng',
-          rating: project.client?.rating || 5,
-          reviewCount: project.client?.reviewCount || 0,
-          hireCount: Math.floor(Math.random() * 20) + 1
-        },
-        proposalCount: project.proposalCount || 0,
-        postedAt: new Date(project.postedAt),
-        applicationStatus: null,
-        location: project.location,
-        duration: project.duration
-      }));
+      setLoading(true);
+      try {
+        // Get projects from Supabase and convert to job format
+        const storedProjects = await getProjects();
+        const convertedProjects = storedProjects.map(project => ({
+          id: project.id,
+          title: project.title,
+          category: project.category,
+          description: project.fullDescription || project.shortDescription,
+          shortDescription: project.shortDescription,
+          budgetMin: project.budgetMin,
+          budgetMax: project.budgetMax,
+          deadline: new Date(project.deadline),
+          skills: project.skills || [],
+          isUrgent: project.isUrgent,
+          client: {
+            name: project.client?.name || 'Khách hàng',
+            rating: project.client?.rating || 5,
+            reviewCount: project.client?.reviewCount || 0,
+            hireCount: Math.floor(Math.random() * 20) + 1
+          },
+          proposalCount: project.proposalCount || 0,
+          postedAt: new Date(project.postedAt),
+          applicationStatus: null,
+          location: project.location,
+          duration: project.duration
+        }));
 
-      // Merge stored projects with mock jobs (stored projects first)
-      const allJobs = [...convertedProjects, ...mockJobs];
-      setJobs(allJobs);
-      setFilteredJobs(allJobs);
-      setLoading(false);
-    }, 1000);
+        // Merge stored projects with mock jobs (stored projects first)
+        const allJobs = [...convertedProjects, ...mockJobs];
+        setJobs(allJobs);
+        setFilteredJobs(allJobs);
+      } catch (error) {
+        console.error('Error fetching projects:', error);
+        // Fallback to mock jobs only if fetching fails
+        setJobs(mockJobs);
+        setFilteredJobs(mockJobs);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProjects();
   }, []);
 
   useEffect(() => {

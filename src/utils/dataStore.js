@@ -1,180 +1,358 @@
-// Simple localStorage-backed data store for Recruitment Portal & Job Marketplace
-// Keys
-const JOBS_KEY = 'recruitment_jobs';
-const APPLICATIONS_KEY = 'recruitment_applications';
-const MARKETPLACE_PROJECTS_KEY = 'marketplace_projects';
+// Supabase-backed data store for Recruitment Portal & Job Marketplace
+import { supabase } from '../lib/supabaseClient.js';
 
-// Helpers
-const read = (key) => {
+// Helper function to generate unique IDs (fallback if needed)
+const genId = (prefix = 'id') => `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+
+// Jobs
+export const getRecruitmentJobs = async () => {
   try {
-    const raw = localStorage.getItem(key);
-    return raw ? JSON.parse(raw) : [];
+    const { data, error } = await supabase
+      .from('jobs')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error('Error fetching recruitment jobs:', error);
+      return [];
+    }
+    
+    return data || [];
   } catch (e) {
-    console.error('dataStore read error', key, e);
+    console.error('Unexpected error fetching recruitment jobs:', e);
     return [];
   }
 };
 
-const write = (key, value) => {
+export const getRecruitmentJobById = async (id) => {
   try {
-    localStorage.setItem(key, JSON.stringify(value));
-    return true;
+    const { data, error } = await supabase
+      .from('jobs')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (error) {
+      console.error('Error fetching recruitment job by ID:', error);
+      return null;
+    }
+    
+    return data;
   } catch (e) {
-    console.error('dataStore write error', key, e);
-    return false;
+    console.error('Unexpected error fetching recruitment job by ID:', e);
+    return null;
   }
 };
 
-const genId = (prefix = 'id') => `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+export const saveRecruitmentJob = async (job) => {
+  try {
+    const now = new Date().toISOString();
+    const jobData = {
+      title: '',
+      department: '',
+      location: '',
+      locationType: 'remote',
+      employmentType: 'full-time',
+      experienceLevel: 'mid',
+      description: '',
+      responsibilities: '',
+      requirements: '',
+      templateType: '',
+      skills: [],
+      certifications: [],
+      salaryMin: '',
+      salaryMax: '',
+      currency: 'VND',
+      showSalary: false,
+      benefits: [],
+      contractTerms: '',
+      applicationDeadline: '',
+      screeningQuestions: [],
+      autoResponse: false,
+      responseTemplate: '',
+      attachments: [],
+      companyMaterials: [],
+      status: 'active',
+      ...job,
+      updated_at: now,
+    };
 
-// Jobs
-export const getRecruitmentJobs = () => read(JOBS_KEY);
-
-export const getRecruitmentJobById = (id) => {
-  return getRecruitmentJobs().find((j) => String(j.id) === String(id));
-};
-
-export const saveRecruitmentJob = (job) => {
-  const jobs = getRecruitmentJobs();
-  const id = job.id || genId('job');
-  const now = new Date().toISOString();
-  const newJob = {
-    id,
-    title: '',
-    department: '',
-    location: '',
-    locationType: 'remote',
-    employmentType: 'full-time',
-    experienceLevel: 'mid',
-    description: '',
-    responsibilities: '',
-    requirements: '',
-    templateType: '',
-    skills: [],
-    certifications: [],
-    salaryMin: '',
-    salaryMax: '',
-    currency: 'VND',
-    showSalary: false,
-    benefits: [],
-    contractTerms: '',
-    applicationDeadline: '',
-    screeningQuestions: [],
-    autoResponse: false,
-    responseTemplate: '',
-    attachments: [],
-    companyMaterials: [],
-    status: 'active',
-    createdAt: now,
-    updatedAt: now,
-    ...job,
-  };
-  const idx = jobs.findIndex((j) => String(j.id) === String(id));
-  if (idx >= 0) jobs[idx] = { ...jobs[idx], ...newJob, updatedAt: now };
-  else jobs.unshift(newJob);
-  write(JOBS_KEY, jobs);
-  return newJob;
+    if (job.id) {
+      // Update existing job
+      const { data, error } = await supabase
+        .from('jobs')
+        .update(jobData)
+        .eq('id', job.id)
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Error updating recruitment job:', error);
+        return null;
+      }
+      
+      return data;
+    } else {
+      // Insert new job
+      jobData.created_at = now;
+      
+      const { data, error } = await supabase
+        .from('jobs')
+        .insert([jobData])
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Error creating recruitment job:', error);
+        return null;
+      }
+      
+      return data;
+    }
+  } catch (e) {
+    console.error('Unexpected error saving recruitment job:', e);
+    return null;
+  }
 };
 
 // Applications
-export const getApplications = () => read(APPLICATIONS_KEY);
-
-export const getApplicationsByJobId = (jobId) => {
-  return getApplications().filter((a) => String(a.jobId) === String(jobId));
+export const getApplications = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('applications')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error('Error fetching applications:', error);
+      return [];
+    }
+    
+    return data || [];
+  } catch (e) {
+    console.error('Unexpected error fetching applications:', e);
+    return [];
+  }
 };
 
-export const saveApplication = (application) => {
-  const apps = getApplications();
-  const id = application.id || genId('app');
-  const now = new Date().toISOString();
-  const newApp = {
-    id,
-    jobId: null,
-    fullName: '',
-    email: '',
-    phone: '',
-    address: '',
-    linkedin: '',
-    github: '',
-    portfolio: '',
-    summary: '',
-    technicalSkills: {},
-    certifications: [],
-    experienceLevel: '',
-    cv: null,
-    coverLetter: null,
-    portfolioFile: null,
-    certificates: [],
-    customAnswers: {},
-    applicationDate: now,
-    status: 'submitted', // submitted -> screening -> interview -> offer -> hired/rejected
-    createdAt: now,
-    updatedAt: now,
-    ...application,
-  };
-  const idx = apps.findIndex((a) => String(a.id) === String(id));
-  if (idx >= 0) apps[idx] = { ...apps[idx], ...newApp, updatedAt: now };
-  else apps.unshift(newApp);
-  write(APPLICATIONS_KEY, apps);
-  return newApp;
+export const getApplicationsByJobId = async (jobId) => {
+  try {
+    const { data, error } = await supabase
+      .from('applications')
+      .select('*')
+      .eq('jobId', jobId)
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error('Error fetching applications by job ID:', error);
+      return [];
+    }
+    
+    return data || [];
+  } catch (e) {
+    console.error('Unexpected error fetching applications by job ID:', e);
+    return [];
+  }
 };
 
-export const updateApplicationStatus = (id, status) => {
-  const apps = getApplications();
-  const idx = apps.findIndex((a) => String(a.id) === String(id));
-  if (idx < 0) return null;
-  apps[idx] = { ...apps[idx], status, updatedAt: new Date().toISOString() };
-  write(APPLICATIONS_KEY, apps);
-  return apps[idx];
+export const saveApplication = async (application) => {
+  try {
+    const now = new Date().toISOString();
+    const applicationData = {
+      jobId: null,
+      fullName: '',
+      email: '',
+      phone: '',
+      address: '',
+      linkedin: '',
+      github: '',
+      portfolio: '',
+      summary: '',
+      technicalSkills: {},
+      certifications: [],
+      experienceLevel: '',
+      cv: null,
+      coverLetter: null,
+      portfolioFile: null,
+      certificates: [],
+      customAnswers: {},
+      applicationDate: now,
+      status: 'submitted', // submitted -> screening -> interview -> offer -> hired/rejected
+      ...application,
+      updated_at: now,
+    };
+
+    if (application.id) {
+      // Update existing application
+      const { data, error } = await supabase
+        .from('applications')
+        .update(applicationData)
+        .eq('id', application.id)
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Error updating application:', error);
+        return null;
+      }
+      
+      return data;
+    } else {
+      // Insert new application
+      applicationData.created_at = now;
+      
+      const { data, error } = await supabase
+        .from('applications')
+        .insert([applicationData])
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Error creating application:', error);
+        return null;
+      }
+      
+      return data;
+    }
+  } catch (e) {
+    console.error('Unexpected error saving application:', e);
+    return null;
+  }
+};
+
+export const updateApplicationStatus = async (id, status) => {
+  try {
+    const { data, error } = await supabase
+      .from('applications')
+      .update({ 
+        status, 
+        updated_at: new Date().toISOString() 
+      })
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error updating application status:', error);
+      return null;
+    }
+    
+    return data;
+  } catch (e) {
+    console.error('Unexpected error updating application status:', e);
+    return null;
+  }
 };
 
 // Marketplace Projects
-export const getProjects = () => read(MARKETPLACE_PROJECTS_KEY);
-
-export const getProjectById = (id) => {
-  return getProjects().find((p) => String(p.id) === String(id));
+export const getProjects = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('projects')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error('Error fetching projects:', error);
+      return [];
+    }
+    
+    return data || [];
+  } catch (e) {
+    console.error('Unexpected error fetching projects:', e);
+    return [];
+  }
 };
 
-export const saveProject = (project) => {
-  const projects = getProjects();
-  const id = project.id || genId('project');
-  const now = new Date().toISOString();
-  const newProject = {
-    id,
-    title: '',
-    shortDescription: '',
-    fullDescription: '',
-    category: '',
-    skills: [],
-    budgetMin: 0,
-    budgetMax: 0,
-    currency: 'VND',
-    duration: '',
-    deadline: '',
-    isUrgent: false,
-    location: '',
-    attachments: [],
-    objectives: [],
-    technicalRequirements: [],
-    deliverables: [],
-    client: {
-      name: '',
-      company: '',
-      rating: 0,
-      reviewCount: 0,
-      location: ''
-    },
-    postedAt: now,
-    proposalCount: 0,
-    status: 'active',
-    createdAt: now,
-    updatedAt: now,
-    ...project,
-  };
-  const idx = projects.findIndex((p) => String(p.id) === String(id));
-  if (idx >= 0) projects[idx] = { ...projects[idx], ...newProject, updatedAt: now };
-  else projects.unshift(newProject);
-  write(MARKETPLACE_PROJECTS_KEY, projects);
-  return newProject;
+export const getProjectById = async (id) => {
+  try {
+    const { data, error } = await supabase
+      .from('projects')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (error) {
+      console.error('Error fetching project by ID:', error);
+      return null;
+    }
+    
+    return data;
+  } catch (e) {
+    console.error('Unexpected error fetching project by ID:', e);
+    return null;
+  }
+};
+
+export const saveProject = async (project) => {
+  try {
+    const now = new Date().toISOString();
+    const projectData = {
+      title: '',
+      shortDescription: '',
+      fullDescription: '',
+      category: '',
+      skills: [],
+      budgetMin: 0,
+      budgetMax: 0,
+      currency: 'VND',
+      duration: '',
+      deadline: '',
+      isUrgent: false,
+      location: '',
+      attachments: [],
+      objectives: [],
+      technicalRequirements: [],
+      deliverables: [],
+      client: {
+        name: '',
+        company: '',
+        rating: 0,
+        reviewCount: 0,
+        location: ''
+      },
+      postedAt: now,
+      proposalCount: 0,
+      status: 'active',
+      ...project,
+      updated_at: now,
+    };
+
+    if (project.id) {
+      // Update existing project
+      const { data, error } = await supabase
+        .from('projects')
+        .update(projectData)
+        .eq('id', project.id)
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Error updating project:', error);
+        return null;
+      }
+      
+      return data;
+    } else {
+      // Insert new project
+      projectData.created_at = now;
+      
+      const { data, error } = await supabase
+        .from('projects')
+        .insert([projectData])
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Error creating project:', error);
+        return null;
+      }
+      
+      return data;
+    }
+  } catch (e) {
+    console.error('Unexpected error saving project:', e);
+    return null;
+  }
 };
 
