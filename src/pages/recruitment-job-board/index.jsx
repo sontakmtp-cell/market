@@ -22,13 +22,20 @@ const RecruitmentJobBoard = () => {
   });
 
   useEffect(() => {
-    // Simulate loading
-    setLoading(true);
-    setTimeout(() => {
-      const list = getRecruitmentJobs();
-      setJobs(list);
-      setLoading(false);
-    }, 600);
+    const fetchJobs = async () => {
+      setLoading(true);
+      try {
+        const list = await getRecruitmentJobs();
+        setJobs(list);
+      } catch (error) {
+        console.error('Error fetching recruitment jobs:', error);
+        setJobs([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchJobs();
   }, []);
 
   const normalizedJobs = useMemo(() => {

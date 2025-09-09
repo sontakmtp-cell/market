@@ -225,43 +225,55 @@ const JobDetails = () => {
   ];
 
   useEffect(() => {
-    // Get project ID from query params or URL params
-    const projectId = searchParams.get('id') || id;
+    const fetchProject = async () => {
+      // Get project ID from query params or URL params
+      const projectId = searchParams.get('id') || id;
 
-    // Simulate loading project data
-    setIsLoading(true);
-    
-    // Try to get project from localStorage first
-    const storedProject = projectId ? getProjectById(projectId) : null;
-    
-    setTimeout(() => {
-      if (storedProject) {
-        // Map stored project to the format expected by the UI
-        const mappedProject = {
-          ...storedProject,
-          budget: `${storedProject.budgetMin?.toLocaleString('vi-VN')} - ${storedProject.budgetMax?.toLocaleString('vi-VN')} ${storedProject.currency}`,
-          proposals: storedProject.proposalCount || 0,
-          status: storedProject.status === 'active' ? 'Đang mở' : 'Đã đóng',
-          postedTime: storedProject.postedAt ? getTimeAgo(storedProject.postedAt) : 'Vừa đăng',
-          averageBid: `${Math.floor((storedProject.budgetMin + storedProject.budgetMax) / 2)?.toLocaleString('vi-VN')} ${storedProject.currency}`,
-          competitionLevel: Math.min(5, Math.max(1, storedProject.proposalCount ? Math.ceil(storedProject.proposalCount / 3) : 1)),
-          views: Math.floor(Math.random() * 200) + 50, // Random views for now
-          timeLeft: storedProject.deadline ? getTimeLeft(storedProject.deadline) : 'Không giới hạn',
-          referenceFiles: storedProject.attachments || []
-        };
-        setProject(mappedProject);
-      } else {
-        // Fallback to mock project
-        setProject(mockProject);
+      setIsLoading(true);
+      
+      try {
+        let fetchedProject = null;
+        
+        // Try to get project from Supabase first
+        if (projectId) {
+          fetchedProject = await getProjectById(projectId);
+        }
+        
+        if (fetchedProject) {
+          // Map stored project to the format expected by the UI
+          const mappedProject = {
+            ...fetchedProject,
+            budget: `${fetchedProject.budgetMin?.toLocaleString('vi-VN')} - ${fetchedProject.budgetMax?.toLocaleString('vi-VN')} ${fetchedProject.currency}`,
+            proposals: fetchedProject.proposalCount || 0,
+            status: fetchedProject.status === 'active' ? 'Đang mở' : 'Đã đóng',
+            postedTime: fetchedProject.postedAt ? getTimeAgo(fetchedProject.postedAt) : 'Vừa đăng',
+            averageBid: `${Math.floor((fetchedProject.budgetMin + fetchedProject.budgetMax) / 2)?.toLocaleString('vi-VN')} ${fetchedProject.currency}`,
+            competitionLevel: Math.min(5, Math.max(1, fetchedProject.proposalCount ? Math.ceil(fetchedProject.proposalCount / 3) : 1)),
+            views: Math.floor(Math.random() * 200) + 50, // Random views for now
+            timeLeft: fetchedProject.deadline ? getTimeLeft(fetchedProject.deadline) : 'Không giới hạn',
+            referenceFiles: fetchedProject.attachments || []
+          };
+          setProject(mappedProject);
+        } else {
+          // If project not found in Supabase, set to null to show "not found" page
+          setProject(null);
+        }
+      } catch (error) {
+        console.error('Error fetching project:', error);
+        // On error, also set to null to show "not found" page
+        setProject(null);
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
-    }, 500);
 
-    // Check if job is saved (only if authenticated)
-    if (isAuthenticated) {
-      const savedJobs = JSON.parse(localStorage.getItem('savedJobs') || '[]');
-      setIsSaved(savedJobs?.includes(projectId || 'proj-001'));
-    }
+      // Check if job is saved (only if authenticated)
+      if (isAuthenticated) {
+        const savedJobs = JSON.parse(localStorage.getItem('savedJobs') || '[]');
+        setIsSaved(savedJobs?.includes(projectId || 'proj-001'));
+      }
+    };
+
+    fetchProject();
   }, [id, searchParams, isAuthenticated]);
 
   // Helper function to calculate time ago
