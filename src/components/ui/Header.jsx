@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import Icon from '../AppIcon';
 import Button from './Button';
+import RoleDropdown from './RoleSwitcherDropdown';
+import { ROLE_CONFIG } from '../../utils/constants';
 import { useSupabase } from '../../contexts/SupabaseContext';
 
 const Header = () => {
@@ -11,6 +13,7 @@ const Header = () => {
 
   const isAuthenticated = !!user;
   const userRole = user?.user_metadata?.role || 'freelancer';
+  const currentRole = (typeof window !== 'undefined' && window?.localStorage?.getItem('userRole')) || userRole;
   const usernameSlug = (user?.user_metadata?.username || user?.email?.split("@")[0] || 'user').toString();
   const publicProfilePath = `/profile/${usernameSlug}`;
 
@@ -109,6 +112,17 @@ const Header = () => {
           <div className="hidden lg:flex items-center space-x-4">
             {isAuthenticated ? (
               <div className="flex items-center space-x-3">
+                <RoleDropdown
+                  currentRole={currentRole}
+                  roles={ROLE_CONFIG}
+                  onRoleChange={(roleKey) => {
+                    try { localStorage.setItem('userRole', roleKey); } catch {}
+                    const path = (roleKey === 'candidate' || roleKey === 'employer')
+                      ? '/recruitment-management-dashboard'
+                      : '/freelancer-dashboard';
+                    window.location.href = path;
+                  }}
+                />
                 <div className="relative group">
                   <Button variant="ghost" className="flex items-center space-x-2">
                     <div className="w-8 h-8 bg-secondary rounded-full flex items-center justify-center">
@@ -275,5 +289,3 @@ const Header = () => {
 };
 
 export default Header;
-
-

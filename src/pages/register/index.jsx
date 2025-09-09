@@ -5,7 +5,7 @@ import Icon from '../../components/AppIcon';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import { Checkbox } from '../../components/ui/Checkbox';
-import RoleSelectionCard from './components/RoleSelectionCard';
+import Select from '../../components/ui/Select';
 import SpecializationSelector from './components/SpecializationSelector';
 import CompanyInfoForm from './components/CompanyInfoForm';
 import ProjectPreferencesForm from './components/ProjectPreferencesForm';
@@ -234,6 +234,33 @@ const Register = () => {
   };
 
   const renderStepContent = () => {
+    // Override Step 2 with Select-based role picker
+    if (currentStep === 2) {
+      return (
+        <div className="space-y-6">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-bold text-foreground mb-2">Chọn vai trò</h2>
+            <p className="text-muted-foreground">Bạn muốn sử dụng TechMarketplace Pro như thế nào?</p>
+          </div>
+          <div className="max-w-md mx-auto w-full">
+            <Select
+              label="Vai trò"
+              placeholder="Chọn vai trò..."
+              value={formData?.selectedRole}
+              onChange={(val) => handleInputChange('selectedRole', val)}
+              required
+              error={errors?.selectedRole}
+              options={[
+                { value: 'client', label: 'Khách hàng' },
+                { value: 'freelancer', label: 'Freelancer' },
+                { value: 'employer', label: 'Nhà tuyển dụng' },
+                { value: 'candidate', label: 'Ứng viên' },
+              ]}
+            />
+          </div>
+        </div>
+      );
+    }
     switch (currentStep) {
       case 1:
         return (
@@ -583,8 +610,6 @@ const Register = () => {
 };
 
 export default Register;
-
-
 
 
 

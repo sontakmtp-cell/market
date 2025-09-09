@@ -337,7 +337,7 @@ const RecruitmentManagementDashboard = () => {
                   <h1 className="text-3xl font-bold text-foreground">
                     {userRole === 'employer' ? 'Bảng điều khiển Tuyển dụng' : 'Theo dõi Ứng tuyển'}
                   </h1>
-                  <div className="bg-muted rounded-md p-1 hidden md:flex items-center space-x-1">
+                  <div className="bg-muted rounded-md p-1 hidden items-center space-x-1">
                     <button
                       onClick={() => handleRoleSwitch('employer')}
                       className={`px-3 py-1.5 text-sm rounded ${userRole === 'employer' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
@@ -366,7 +366,7 @@ const RecruitmentManagementDashboard = () => {
                 </div>
                 <div className="flex flex-wrap items-center gap-3">
                   {/* Role Switch for Mobile */}
-                  <div className="bg-muted rounded-md p-1 flex md:hidden items-center space-x-1">
+                  <div className="bg-muted rounded-md p-1 hidden md:hidden items-center space-x-1">
                     <button
                       onClick={() => handleRoleSwitch('employer')}
                       className={`px-3 py-1.5 text-sm rounded ${userRole === 'employer' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
