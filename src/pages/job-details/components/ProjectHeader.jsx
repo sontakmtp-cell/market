@@ -1,10 +1,22 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 import { useAuth } from '../../../hooks/useAuth';
+import { useSupabase } from '../../../contexts/SupabaseContext';
 
 const ProjectHeader = ({ project, onSaveJob, isSaved }) => {
   const { isAuthenticated } = useAuth();
+  const { user } = useSupabase();
+  const navigate = useNavigate();
+  
+  // Check if current user is the project owner
+  const isOwner = isAuthenticated && user && project?.client_user_id === user.id;
+  
+  const handleEditProject = () => {
+    navigate(`/job-post/edit/${project?.id}`);
+  };
+
   return (
     <div className="bg-card border border-border rounded-lg p-6 mb-6">
       <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
@@ -46,17 +58,29 @@ const ProjectHeader = ({ project, onSaveJob, isSaved }) => {
         </div>
         
         <div className="flex flex-col sm:flex-row lg:flex-col gap-3">
-          <Button
-            variant="outline"
-            onClick={onSaveJob}
-            iconName={isAuthenticated && isSaved ? "Heart" : "Heart"}
-            iconPosition="left"
-            className={isAuthenticated && isSaved ? "text-error border-error" : ""}
-            disabled={!isAuthenticated}
-            title={!isAuthenticated ? "Đăng nhập để lưu công việc" : ""}
-          >
-            {isAuthenticated ? (isSaved ? "Đã lưu" : "Lưu công việc") : "Đăng nhập để lưu"}
-          </Button>
+          {isOwner && (
+            <Button
+              onClick={handleEditProject}
+              iconName="Edit"
+              iconPosition="left"
+              className="bg-primary text-white hover:bg-primary/90"
+            >
+              Chỉnh sửa dự án
+            </Button>
+          )}
+          {!isOwner && (
+            <Button
+              variant="outline"
+              onClick={onSaveJob}
+              iconName={isAuthenticated && isSaved ? "Heart" : "Heart"}
+              iconPosition="left"
+              className={isAuthenticated && isSaved ? "text-error border-error" : ""}
+              disabled={!isAuthenticated}
+              title={!isAuthenticated ? "Đăng nhập để lưu công việc" : ""}
+            >
+              {isAuthenticated ? (isSaved ? "Đã lưu" : "Lưu công việc") : "Đăng nhập để lưu"}
+            </Button>
+          )}
           <Button
             variant="ghost"
             iconName="Share2"

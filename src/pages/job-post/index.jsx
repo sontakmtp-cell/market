@@ -1,13 +1,17 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import Header from '../../components/ui/Header';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Select from '../../components/ui/Select';
-import { saveProject } from '../../utils/dataStore';
+import { saveProject, getProjectById } from '../../utils/dataStore';
+import { useSupabase } from '../../contexts/SupabaseContext';
 
 const JobPost = () => {
   const navigate = useNavigate();
+  const { id } = useParams(); // Get project ID from URL for editing
+  const { user } = useSupabase(); // Get current user
+  const [isEditMode, setIsEditMode] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     shortDescription: '',
@@ -37,6 +41,52 @@ const JobPost = () => {
 
   const [errors, setErrors] = useState({});
   const [currentSkill, setCurrentSkill] = useState('');
+
+  // Load project data for editing
+  useEffect(() => {
+    if (id) {
+      setIsEditMode(true);
+      const fetchProject = async () => {
+        try {
+          const projectData = await getProjectById(id);
+          if (projectData) {
+            // Map database fields to form data structure
+            setFormData({
+              title: projectData.title || '',
+              shortDescription: projectData.shortDescription || '',
+              fullDescription: projectData.fullDescription || '',
+              category: projectData.category || '',
+              skills: Array.isArray(projectData.skills) ? projectData.skills : [],
+              budgetMin: projectData.budgetMin?.toString() || '',
+              budgetMax: projectData.budgetMax?.toString() || '',
+              currency: projectData.currency || 'VND',
+              duration: projectData.duration || '',
+              deadline: projectData.deadline || '',
+              isUrgent: projectData.isUrgent || false,
+              location: projectData.location || '',
+              attachments: Array.isArray(projectData.attachments) ? projectData.attachments : [],
+              referenceDocuments: Array.isArray(projectData.attachments) ? projectData.attachments : [],
+              objectives: Array.isArray(projectData.objectives) ? projectData.objectives : [''],
+              technicalRequirements: Array.isArray(projectData.technicalRequirements) ? projectData.technicalRequirements : [{ category: '', items: [''] }],
+              deliverables: Array.isArray(projectData.deliverables) ? projectData.deliverables : [{ title: '', description: '', deadline: '' }],
+              client: projectData.client || {
+                name: 'Khách hàng',
+                company: '',
+                rating: 5,
+                reviewCount: 0,
+                location: ''
+              }
+            });
+          }
+        } catch (error) {
+          console.error('Error fetching project for editing:', error);
+          alert('Không thể tải dữ liệu dự án. Vui lòng thử lại.');
+          navigate('/job-marketplace');
+        }
+      };
+      fetchProject();
+    }
+  }, [id, navigate]);
 
   const categories = [
     { value: 'structural', label: 'Kết cấu xây dựng' },
@@ -254,6 +304,13 @@ const JobPost = () => {
       return;
     }
 
+    // Check if user is authenticated
+    if (!user) {
+      alert('Bạn cần đăng nhập để đăng dự án. Vui lòng đăng nhập và thử lại.');
+      navigate('/login');
+      return;
+    }
+
     try {
       // Clean up data before saving
       const cleanData = {
@@ -268,7 +325,7 @@ const JobPost = () => {
             items: req.items.filter(item => item.trim())
           })),
         deliverables: formData.deliverables.filter(del => del.title.trim()),
-        referenceDocuments: formData.referenceDocuments.map(doc => ({
+        attachments: formData.referenceDocuments.map(doc => ({
           id: doc.id,
           name: doc.name,
           size: doc.size,
@@ -278,10 +335,16 @@ const JobPost = () => {
         }))
       };
 
+      // If in edit mode, include the project ID
+      if (isEditMode && id) {
+        cleanData.id = id;
+      }
+
       const savedProject = await saveProject(cleanData);
       if (savedProject?.id) {
-        alert('Dự án đã được đăng thành công!');
-        navigate(`/job-details?id=${savedProject.id}`);
+        const message = isEditMode ? 'Dự án đã được cập nhật thành công!' : 'Dự án đã được đăng thành công!';
+        alert(message);
+        navigate(`/job-details/${savedProject.id}`);
       } else {
         console.error('Project was not saved or missing id:', savedProject);
         alert('Không thể lưu dự án. Vui lòng thử lại.');
@@ -297,7 +360,7 @@ const JobPost = () => {
         alert('Lỗi quyền truy cập. Vui lòng đăng nhập lại và thử lại.');
         navigate('/login');
       } else {
-        alert(`Có lỗi xảy ra khi đăng dự án: ${error.message}`);
+        alert(`Có lỗi xảy ra khi lưu dự án: ${error.message}`);
       }
     }
   };
@@ -309,8 +372,15 @@ const JobPost = () => {
       <div className="max-w-4xl mx-auto px-6 py-8">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Đăng dự án mới</h1>
-            <p className="text-gray-600">Cung cấp thông tin chi tiết về dự án để thu hút các freelancer phù hợp</p>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              {isEditMode ? 'Chỉnh sửa dự án' : 'Đăng dự án mới'}
+            </h1>
+            <p className="text-gray-600">
+              {isEditMode 
+                ? 'Cập nhật thông tin dự án của bạn' 
+                : 'Cung cấp thông tin chi tiết về dự án để thu hút các freelancer phù hợp'
+              }
+            </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-8">
@@ -753,7 +823,7 @@ const JobPost = () => {
                 Hủy
               </Button>
               <Button type="submit">
-                Đăng dự án
+                {isEditMode ? 'Cập nhật dự án' : 'Đăng dự án'}
               </Button>
             </div>
           </form>
