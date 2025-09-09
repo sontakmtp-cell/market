@@ -1,0 +1,113 @@
+-- =========== BẢNG 1: PROFILES (Lưu thông tin người dùng) ===========
+-- Bảng này sẽ lưu trữ thông tin chi tiết của mỗi người dùng,
+-- liên kết trực tiếp với hệ thống quản lý tài khoản (auth) của Supabase.
+
+CREATE TABLE public.profiles (
+  id uuid NOT NULL PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  updated_at timestamptz,
+  username text UNIQUE,
+  display_name text,
+  avatar_url text,
+  cover_image_url text,
+  bio text,
+  location text,
+  languages text[],
+  phone text,
+  social_links jsonb,
+  visibility jsonb,
+  role_profiles jsonb
+);
+
+-- Bật Row Level Security (RLS) cho bảng profiles để bảo mật
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+
+
+-- =========== BẢNG 2: RECRUITMENT_JOBS (Lưu tin tuyển dụng) ===========
+-- Dựa theo cấu trúc trong dataStore.js (hàm saveRecruitmentJob).
+
+CREATE TABLE public.recruitment_jobs (
+  id bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  created_at timestamptz DEFAULT now() NOT NULL,
+  updated_at timestamptz,
+  user_id uuid REFERENCES auth.users(id) ON DELETE SET NULL,
+  title text,
+  department text,
+  location text,
+  "locationType" text,
+  "employmentType" text,
+  "experienceLevel" text,
+  description text,
+  responsibilities text,
+  requirements text,
+  skills text[],
+  certifications text[],
+  "salaryMin" bigint,
+  "salaryMax" bigint,
+  currency text DEFAULT 'VND',
+  "showSalary" boolean DEFAULT false,
+  benefits text[],
+  "contractTerms" text,
+  "applicationDeadline" timestamptz,
+  "screeningQuestions" jsonb,
+  "autoResponse" boolean DEFAULT false,
+  "responseTemplate" text,
+  attachments jsonb[],
+  "companyMaterials" jsonb[],
+  status text DEFAULT 'active'
+);
+
+-- Bật Row Level Security (RLS) cho bảng recruitment_jobs
+ALTER TABLE public.recruitment_jobs ENABLE ROW LEVEL SECURITY;
+
+
+-- =========== BẢNG 3: MARKETPLACE_PROJECTS (Lưu dự án freelance) ===========
+-- Dựa theo cấu trúc trong dataStore.js (hàm saveProject).
+
+CREATE TABLE public.marketplace_projects (
+  id bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  created_at timestamptz DEFAULT now() NOT NULL,
+  updated_at timestamptz,
+  client_user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE,
+  title text NOT NULL,
+  "shortDescription" text,
+  "fullDescription" text,
+  category text,
+  skills text[],
+  "budgetMin" bigint,
+  "budgetMax" bigint,
+  currency text DEFAULT 'VND',
+  duration text,
+  deadline timestamptz,
+  "isUrgent" boolean DEFAULT false,
+  location text,
+  attachments jsonb[],
+  objectives jsonb[],
+  "technicalRequirements" jsonb[],
+  deliverables jsonb[],
+  client jsonb,
+  "proposalCount" integer DEFAULT 0,
+  status text DEFAULT 'active'
+);
+
+-- Bật Row Level Security (RLS) cho bảng marketplace_projects
+ALTER TABLE public.marketplace_projects ENABLE ROW LEVEL SECURITY;
+
+
+-- =========== TỰ ĐỘNG HÓA: TẠO PROFILE KHI CÓ USER MỚI ===========
+-- 1. Tạo Function (bản hướng dẫn)
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer set search_path = public
+as $$
+begin
+  insert into public.profiles (id, username, display_name)
+  values (new.id, new.raw_user_meta_data->>'username', new.raw_user_meta_data->>'full_name');
+  return new;
+end;
+$$;
+
+-- 2. Tạo Trigger (công tắc cảm biến)
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute procedure public.handle_new_user();
