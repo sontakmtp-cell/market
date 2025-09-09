@@ -96,12 +96,18 @@ const ProjectDetails = ({ project }) => {
                       </div>
                       <div>
                         <h4 className="font-medium text-foreground">{file?.name}</h4>
-                        <p className="text-sm text-muted-foreground">{file?.size} • {file?.type?.toUpperCase()}</p>
+                        <p className="text-sm text-muted-foreground">{file?.size} · {file?.type?.toUpperCase()}</p>
                       </div>
                     </div>
-                    <Button variant="ghost" size="sm" iconName="Download" iconPosition="left">
-                      Tải xuống
-                    </Button>
+                    {file?.url ? (
+                      <Button asChild variant="ghost" size="sm" iconName="Download" iconPosition="left">
+                        <a href={file.url} download target="_blank" rel="noopener noreferrer">Tải xuống</a>
+                      </Button>
+                    ) : (
+                      <Button variant="ghost" size="sm" iconName="Download" iconPosition="left" disabled title="Không có file để tải">
+                        Tải xuống
+                      </Button>
+                    )}
                   </div>
                 ))}
               </div>
