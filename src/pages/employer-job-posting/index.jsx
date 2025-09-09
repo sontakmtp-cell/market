@@ -11,6 +11,7 @@ import PreviewMode from './components/PreviewMode';
 import Button from '../../components/ui/Button';
 import Icon from '../../components/AppIcon';
 import { saveRecruitmentJob } from '../../utils/dataStore';
+import { uploadFile } from '../../lib/supabaseClient';
 
 const EmployerJobPosting = () => {
   const navigate = useNavigate();
@@ -203,6 +204,41 @@ const EmployerJobPosting = () => {
     setIsDraft(true);
   };
 
+  // Helper: upload all selected files to Supabase Storage and return normalized arrays
+  const uploadJobFiles = async (data) => {
+    const attachments = Array.isArray(data.attachments) ? data.attachments : [];
+    const companyMaterials = Array.isArray(data.companyMaterials) ? data.companyMaterials : [];
+
+    const uploadAttachmentPromises = attachments.map(async (f) => {
+      if (!f?.file) {
+        return { name: f?.name, size: f?.size, type: f?.type, url: f?.url };
+      }
+      const { publicURL, error } = await uploadFile(f.file, 'job-attachments');
+      if (error || !publicURL) {
+        throw new Error(`Tải file thất bại: ${f?.name} (${error?.message || 'unknown error'})`);
+      }
+      return { name: f.name, size: f.size, type: f.type, url: publicURL };
+    });
+
+    const uploadCompanyPromises = companyMaterials.map(async (f) => {
+      if (!f?.file) {
+        return { name: f?.name, size: f?.size, type: f?.type, url: f?.url };
+      }
+      const { publicURL, error } = await uploadFile(f.file, 'job-attachments');
+      if (error || !publicURL) {
+        throw new Error(`Tải file thất bại: ${f?.name} (${error?.message || 'unknown error'})`);
+      }
+      return { name: f.name, size: f.size, type: f.type, url: publicURL };
+    });
+
+    const [newAttachments, newCompanyMaterials] = await Promise.all([
+      Promise.all(uploadAttachmentPromises),
+      Promise.all(uploadCompanyPromises)
+    ]);
+
+    return { newAttachments, newCompanyMaterials };
+  };
+
   // Persist via Supabase dataStore and navigate to dashboard
   const handleSubmitRecruitment = async () => {
     // Validate all sections first using existing logic
@@ -219,6 +255,7 @@ const EmployerJobPosting = () => {
 
     setLoading(true);
     try {
+      const { newAttachments, newCompanyMaterials } = await uploadJobFiles(formData);
       const { data, error } = await saveRecruitmentJob({
         title: formData.title,
         department: formData.department,
@@ -242,8 +279,8 @@ const EmployerJobPosting = () => {
         screeningQuestions: formData.screeningQuestions,
         autoResponse: formData.autoResponse,
         responseTemplate: formData.responseTemplate,
-        attachments: formData.attachments,
-        companyMaterials: formData.companyMaterials,
+        attachments: newAttachments,
+        companyMaterials: newCompanyMaterials,
         status: 'active',
       });
 

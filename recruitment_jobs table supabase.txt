@@ -1,0 +1,55 @@
+create table public.recruitment_jobs (
+  id bigint generated always as identity not null,
+  created_at timestamp with time zone not null default now(),
+  updated_at timestamp with time zone null,
+  user_id uuid null,
+  title text null,
+  department text null,
+  location text null,
+  "locationType" text null,
+  "employmentType" text null,
+  "experienceLevel" text null,
+  description text null,
+  responsibilities text null,
+  requirements text null,
+  skills text[] null,
+  certifications text[] null,
+  "salaryMin" bigint null,
+  "salaryMax" bigint null,
+  currency text null default 'VND'::text,
+  "showSalary" boolean null default false,
+  benefits text[] null,
+  "contractTerms" text null,
+  "applicationDeadline" timestamp with time zone null,
+  "screeningQuestions" jsonb null,
+  "autoResponse" boolean null default false,
+  "responseTemplate" text null,
+  attachments jsonb[] null,
+  "companyMaterials" jsonb[] null,
+  status text null default 'active'::text,
+  "templateType" text null,
+  constraint recruitment_jobs_pkey primary key (id),
+  constraint recruitment_jobs_user_id_fkey foreign KEY (user_id) references auth.users (id) on delete set null
+) TABLESPACE pg_default;
+
+create index IF not exists idx_recruitment_jobs_user_id on public.recruitment_jobs using btree (user_id) TABLESPACE pg_default;
+
+create index IF not exists idx_recruitment_jobs_status on public.recruitment_jobs using btree (status) TABLESPACE pg_default;
+
+create index IF not exists idx_recruitment_jobs_created_at on public.recruitment_jobs using btree (created_at desc) TABLESPACE pg_default;
+
+create index IF not exists idx_recruitment_jobs_location_type on public.recruitment_jobs using btree ("locationType") TABLESPACE pg_default;
+
+create index IF not exists idx_recruitment_jobs_employment_type on public.recruitment_jobs using btree ("employmentType") TABLESPACE pg_default;
+
+create index IF not exists idx_recruitment_jobs_experience_level on public.recruitment_jobs using btree ("experienceLevel") TABLESPACE pg_default;
+
+create index IF not exists idx_recruitment_jobs_deadline on public.recruitment_jobs using btree ("applicationDeadline") TABLESPACE pg_default;
+
+create index IF not exists idx_recruitment_jobs_skills_gin on public.recruitment_jobs using gin (skills) TABLESPACE pg_default;
+
+create index IF not exists idx_recruitment_jobs_benefits_gin on public.recruitment_jobs using gin (benefits) TABLESPACE pg_default;
+
+create trigger update_recruitment_jobs_updated_at BEFORE
+update on recruitment_jobs for EACH row
+execute FUNCTION update_updated_at_column ();
