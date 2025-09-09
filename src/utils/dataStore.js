@@ -46,69 +46,41 @@ export const getRecruitmentJobById = async (id) => {
 
 export const saveRecruitmentJob = async (job) => {
   try {
+    // 1) Lấy user hiện tại từ session
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError) {
+      console.error('Error getting session:', sessionError);
+      return null;
+    }
+
+    const userId = sessionData?.session?.user?.id;
+    if (!userId) {
+      console.error('No authenticated user found. Cannot save recruitment job.');
+      return null;
+    }
+
+    // 2) Chuẩn bị dữ liệu cần lưu (kèm user_id và updated_at)
     const now = new Date().toISOString();
-    const jobData = {
-      title: '',
-      department: '',
-      location: '',
-      locationType: 'remote',
-      employmentType: 'full-time',
-      experienceLevel: 'mid',
-      description: '',
-      responsibilities: '',
-      requirements: '',
-      templateType: '',
-      skills: [],
-      certifications: [],
-      salaryMin: '',
-      salaryMax: '',
-      currency: 'VND',
-      showSalary: false,
-      benefits: [],
-      contractTerms: '',
-      applicationDeadline: '',
-      screeningQuestions: [],
-      autoResponse: false,
-      responseTemplate: '',
-      attachments: [],
-      companyMaterials: [],
-      status: 'active',
+    const dataToSave = {
+      ...(job?.id ? { id: job.id } : {}),
       ...job,
+      user_id: userId,
       updated_at: now,
     };
 
-    if (job.id) {
-      // Update existing job
-      const { data, error } = await supabase
-        .from('jobs')
-        .update(jobData)
-        .eq('id', job.id)
-        .select()
-        .single();
-      
-      if (error) {
-        console.error('Error updating recruitment job:', error);
-        return null;
-      }
-      
-      return data;
-    } else {
-      // Insert new job
-      jobData.created_at = now;
-      
-      const { data, error } = await supabase
-        .from('jobs')
-        .insert([jobData])
-        .select()
-        .single();
-      
-      if (error) {
-        console.error('Error creating recruitment job:', error);
-        return null;
-      }
-      
-      return data;
+    // 3) Lưu bằng upsert vào bảng recruitment_jobs
+    const { data, error } = await supabase
+      .from('recruitment_jobs')
+      .upsert(dataToSave)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error upserting recruitment job:', error);
+      return null;
     }
+
+    return data;
   } catch (e) {
     console.error('Unexpected error saving recruitment job:', e);
     return null;
@@ -355,4 +327,3 @@ export const saveProject = async (project) => {
     return null;
   }
 };
-
