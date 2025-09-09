@@ -148,3 +148,4 @@ const ProjectDetails = ({ project }) => {
 };
 
 export default ProjectDetails;
+
