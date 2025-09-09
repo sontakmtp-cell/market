@@ -3,9 +3,14 @@ import { Link } from 'react-router-dom';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 import { useAuth } from '../../../hooks/useAuth';
+import { useSupabase } from '../../../contexts/SupabaseContext';
 
 const JobCard = ({ job, userRole = 'freelancer' }) => {
   const { isAuthenticated, redirectToLogin } = useAuth();
+  const { user } = useSupabase();
+  
+  // Check if current user is the job owner
+  const isOwner = isAuthenticated && user && job?.client_user_id === user.id;
   
   const getCategoryIcon = (category) => {
     const icons = {
@@ -68,7 +73,7 @@ const JobCard = ({ job, userRole = 'freelancer' }) => {
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
           <Link 
-            to={`/job-details?id=${job?.id}`}
+            to={`/job-details/${job?.id}`}
             className="text-lg font-semibold text-foreground hover:text-primary transition-smooth line-clamp-2"
           >
             {job?.title}
@@ -165,7 +170,7 @@ const JobCard = ({ job, userRole = 'freelancer' }) => {
                 {isAuthenticated ? "Lưu" : "Đăng nhập để lưu"}
               </Button>
               {isAuthenticated ? (
-                <Link to={`/job-details?id=${job?.id}`}>
+                <Link to={`/job-details/${job?.id}`}>
                   <Button variant="default" size="sm">
                     Xem chi tiết
                   </Button>
@@ -183,27 +188,18 @@ const JobCard = ({ job, userRole = 'freelancer' }) => {
             </>
           ) : (
             <>
-              <Link to={`/job-details?id=${job?.id}`}>
+              <Link to={`/job-details/${job?.id}`}>
                 <Button variant="outline" size="sm">
                   Xem đề xuất
                 </Button>
               </Link>
-              {isAuthenticated ? (
-                <Button variant="default" size="sm">
-                  <Icon name="Edit" size={14} className="mr-1" />
-                  Chỉnh sửa
-                </Button>
-              ) : (
-                <Button 
-                  variant="default" 
-                  size="sm"
-                  onClick={redirectToLogin}
-                  disabled
-                  title="Đăng nhập để chỉnh sửa"
-                >
-                  <Icon name="Lock" size={14} className="mr-1" />
-                  Đăng nhập để chỉnh sửa
-                </Button>
+              {isOwner && (
+                <Link to={`/job-post/edit/${job?.id}`}>
+                  <Button variant="default" size="sm">
+                    <Icon name="Edit" size={14} className="mr-1" />
+                    Chỉnh sửa
+                  </Button>
+                </Link>
               )}
             </>
           )}

@@ -4,7 +4,7 @@ import Header from '../../components/ui/Header';
 import FilterSidebar from './components/FilterSidebar';
 import SearchHeader from './components/SearchHeader';
 import JobGrid from './components/JobGrid';
-import { supabase } from '../../lib/supabaseClient.js';
+import { getProjects } from '../../utils/dataStore';
 import { useAuth } from '../../hooks/useAuth';
 import LoginPrompt from '../../components/LoginPrompt';
 
@@ -29,128 +29,7 @@ const JobMarketplace = () => {
   });
 
   // Mock job data
-  const mockJobs = [
-    {
-      id: 1,
-      title: "Thiết kế kết cấu thép cho nhà xưởng 2000m²",
-      category: "structural",
-      description: `Cần thiết kế kết cấu thép cho nhà xưởng sản xuất với diện tích 2000m². Yêu cầu có kinh nghiệm thiết kế kết cấu thép, sử dụng phần mềm SAP2000 hoặc ETABS.\n\nCông việc bao gồm:\n- Tính toán và thiết kế kết cấu thép\n- Vẽ bản vẽ thi công chi tiết\n- Lập thuyết minh tính toán`,
-      budgetMin: 15000000,
-      budgetMax: 25000000,
-      deadline: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000),
-      skills: ["SAP2000", "ETABS", "AutoCAD", "Kết cấu thép"],
-      isUrgent: false,
-      client: {
-        name: "Công ty TNHH Xây dựng Minh Phát",
-        rating: 4.8,
-        reviewCount: 23,
-        hireCount: 15
-      },
-      proposalCount: 8,
-      postedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-      applicationStatus: null
-    },
-    {
-      id: 2,
-      title: "Thiết kế mạch điện tử cho hệ thống IoT",
-      category: "electronic",
-      description: `Thiết kế mạch điện tử cho hệ thống giám sát nhiệt độ, độ ẩm IoT. Yêu cầu có kinh nghiệm với ESP32, cảm biến DHT22, và giao tiếp WiFi.\n\nYêu cầu cụ thể:\n- Thiết kế sơ đồ mạch\n- Lập trình firmware\n- Test và tối ưu hóa`,
-      budgetMin: 8000000,
-      budgetMax: 12000000,
-      deadline: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
-      skills: ["ESP32", "Arduino", "IoT", "C++", "Altium Designer"],
-      isUrgent: true,
-      client: {
-        name: "Nguyễn Văn Hùng",
-        rating: 4.5,
-        reviewCount: 12,
-        hireCount: 8
-      },
-      proposalCount: 5,
-      postedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
-      applicationStatus: "applied"
-    },
-    {
-      id: 3,
-      title: "Thiết kế hệ thống cần cẩu tháp 8 tấn",
-      category: "crane",
-      description: `Thiết kế hệ thống cần cẩu tháp tải trọng 8 tấn cho công trình xây dựng cao tầng. Cần có chứng chỉ thiết kế cần cẩu và kinh nghiệm tối thiểu 5 năm.\n\nPhạm vi công việc:\n- Tính toán kết cấu cần cẩu\n- Thiết kế hệ thống an toàn\n- Lập hồ sơ thẩm định`,
-      budgetMin: 30000000,
-      budgetMax: 45000000,
-      deadline: new Date(Date.now() + 35 * 24 * 60 * 60 * 1000),
-      skills: ["Thiết kế cần cẩu", "SAP2000", "Kết cấu thép", "An toàn lao động"],
-      isUrgent: false,
-      client: {
-        name: "Tổng công ty Xây dựng Hà Nội",
-        rating: 4.9,
-        reviewCount: 45,
-        hireCount: 32
-      },
-      proposalCount: 12,
-      postedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-      applicationStatus: null
-    },
-    {
-      id: 4,
-      title: "Thiết kế hệ thống truyền động băng tải",
-      category: "mechanical",
-      description: `Thiết kế hệ thống truyền động cho băng tải công nghiệp, tải trọng 500kg, chiều dài 50m. Yêu cầu tính toán động cơ, hộp giảm tốc và hệ thống điều khiển.\n\nCông việc bao gồm:\n- Tính toán động học\n- Chọn động cơ và hộp giảm tốc\n- Thiết kế hệ thống điều khiển`,
-      budgetMin: 12000000,
-      budgetMax: 18000000,
-      deadline: new Date(Date.now() + 28 * 24 * 60 * 60 * 1000),
-      skills: ["SolidWorks", "Cơ học máy", "Truyền động", "PLC"],
-      isUrgent: false,
-      client: {
-        name: "Công ty CP Cơ khí Thành Đạt",
-        rating: 4.6,
-        reviewCount: 18,
-        hireCount: 11
-      },
-      proposalCount: 6,
-      postedAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000),
-      applicationStatus: "shortlisted"
-    },
-    {
-      id: 5,
-      title: "Thiết kế kiến trúc biệt thự 3 tầng",
-      category: "architecture",
-      description: `Thiết kế kiến trúc biệt thự 3 tầng, diện tích 200m² mỗi tầng. Phong cách hiện đại, tối ưu ánh sáng tự nhiên và thông gió.\n\nYêu cầu:\n- Bản vẽ kiến trúc chi tiết\n- Phối cảnh 3D\n- Hồ sơ xin phép xây dựng`,
-      budgetMin: 20000000,
-      budgetMax: 35000000,
-      deadline: new Date(Date.now() + 42 * 24 * 60 * 60 * 1000),
-      skills: ["AutoCAD", "SketchUp", "3ds Max", "Revit"],
-      isUrgent: false,
-      client: {
-        name: "Gia đình Trần Minh Tuấn",
-        rating: 4.7,
-        reviewCount: 8,
-        hireCount: 3
-      },
-      proposalCount: 15,
-      postedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-      applicationStatus: null
-    },
-    {
-      id: 6,
-      title: "Tính toán kết cấu bê tông cốt thép cho cầu",
-      category: "structural",
-      description: `Tính toán kết cấu bê tông cốt thép cho cầu nhịp 30m. Yêu cầu có chứng chỉ thiết kế cầu và kinh nghiệm tối thiểu 7 năm trong lĩnh vực này.\n\nPhạm vi công việc:\n- Tính toán tĩnh và động\n- Kiểm tra ổn định\n- Lập bản vẽ thi công`,
-      budgetMin: 40000000,
-      budgetMax: 60000000,
-      deadline: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000),
-      skills: ["Midas Civil", "SAP2000", "Thiết kế cầu", "Bê tông cốt thép"],
-      isUrgent: true,
-      client: {
-        name: "Sở Giao thông Vận tải Hà Nội",
-        rating: 4.9,
-        reviewCount: 67,
-        hireCount: 45
-      },
-      proposalCount: 3,
-      postedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
-      applicationStatus: null
-    }
-  ];
+  // Removed mock data - now using Supabase data from marketplace_projects table
 
   const [jobs, setJobs] = useState([]);
   const [filteredJobs, setFilteredJobs] = useState([]);
@@ -164,23 +43,37 @@ const JobMarketplace = () => {
 
       setLoading(true);
       try {
-        // Fetch marketplace projects and treat them as jobs for this page
-        const { data, error } = await supabase.from('marketplace_projects').select('*');
-        if (error) {
-          console.error('Error fetching jobs:', error);
-          return;
-        }
+        // Fetch marketplace projects using the dataStore function
+        const projectsData = await getProjects();
+        
         // Map DB rows to UI shape if needed
-        const mapped = (data || []).map((p) => ({
+        const mapped = (projectsData || []).map((p) => ({
           ...p,
           postedAt: p.created_at || p.postedAt,
           deadline: p.deadline ? new Date(p.deadline) : null,
           skills: Array.isArray(p.skills) ? p.skills : [],
+          // Map budget fields
+          budgetMin: p.budgetMin || 0,
+          budgetMax: p.budgetMax || 0,
+          // Ensure client data structure
+          client: p.client || {
+            name: 'Khách hàng',
+            company: '',
+            rating: 0,
+            reviewCount: 0,
+            location: ''
+          },
+          proposalCount: p.proposalCount || 0,
+          applicationStatus: null // This would come from user's applications if implemented
         }));
+        
         setJobs(mapped);
         setFilteredJobs(mapped);
       } catch (err) {
-        console.error('Unexpected error fetching jobs:', err);
+        console.error('Error fetching jobs:', err);
+        // Set empty array on error to prevent UI issues
+        setJobs([]);
+        setFilteredJobs([]);
       } finally {
         setLoading(false);
       }

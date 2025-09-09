@@ -47,7 +47,13 @@ const Routes = () => {
         <Route path="/job-marketplace" element={<JobMarketplace />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/job-details" element={<JobDetails />} />
+        <Route path="/job-details/:id" element={<JobDetails />} />
         <Route path="/job-post" element={
+          <AuthGuard>
+            <JobPost />
+          </AuthGuard>
+        } />
+        <Route path="/job-post/edit/:id" element={
           <AuthGuard>
             <JobPost />
           </AuthGuard>

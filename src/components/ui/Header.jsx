@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import Icon from '../AppIcon';
 import Button from './Button';
 import RoleDropdown from './RoleSwitcherDropdown';
+import MobileRoleButton from './MobileRoleButton';
 import { ROLE_CONFIG } from '../../utils/constants';
 import { useSupabase } from '../../contexts/SupabaseContext';
 
@@ -173,13 +174,30 @@ const Header = () => {
             )}
           </div>
 
-          {/* Mobile Menu Button */}
-          <button
-            onClick={toggleMenu}
-            className="lg:hidden p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-smooth"
-          >
-            <Icon name={isMenuOpen ? "X" : "Menu"} size={24} />
-          </button>
+          {/* Mobile Role Switcher + Menu Button */}
+          <div className="lg:hidden flex items-center space-x-2">
+            {isAuthenticated && (
+              <div className="flex-shrink-0">
+                <MobileRoleButton
+                  currentRole={currentRole}
+                  roles={ROLE_CONFIG}
+                  onRoleChange={(roleKey) => {
+                    try { localStorage.setItem('userRole', roleKey); } catch {}
+                    const path = (roleKey === 'candidate' || roleKey === 'employer')
+                      ? '/recruitment-management-dashboard'
+                      : '/freelancer-dashboard';
+                    window.location.href = path;
+                  }}
+                />
+              </div>
+            )}
+            <button
+              onClick={toggleMenu}
+              className="p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-smooth"
+            >
+              <Icon name={isMenuOpen ? "X" : "Menu"} size={24} />
+            </button>
+          </div>
         </div>
       </div>
       {/* Mobile Menu Overlay */}
