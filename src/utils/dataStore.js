@@ -220,7 +220,7 @@ export const updateApplicationStatus = async (id, status) => {
 export const getProjects = async () => {
   try {
     const { data, error } = await supabase
-      .from('projects')
+      .from('marketplace_projects')
       .select('*')
       .order('created_at', { ascending: false });
     
@@ -239,7 +239,7 @@ export const getProjects = async () => {
 export const getProjectById = async (id) => {
   try {
     const { data, error } = await supabase
-      .from('projects')
+      .from('marketplace_projects')
       .select('*')
       .eq('id', id)
       .single();
@@ -258,42 +258,54 @@ export const getProjectById = async (id) => {
 
 export const saveProject = async (project) => {
   try {
+    // Ensure we have current user for client_user_id
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError) {
+      console.error('Error getting session:', sessionError);
+      return null;
+    }
+    const clientUserId = sessionData?.session?.user?.id || null;
+    if (!clientUserId) {
+      console.error('No authenticated user. Cannot save project.');
+      return null;
+    }
+
     const now = new Date().toISOString();
     const projectData = {
-      title: '',
-      shortDescription: '',
-      fullDescription: '',
-      category: '',
-      skills: [],
-      budgetMin: 0,
-      budgetMax: 0,
-      currency: 'VND',
-      duration: '',
-      deadline: '',
-      isUrgent: false,
-      location: '',
-      attachments: [],
-      objectives: [],
-      technicalRequirements: [],
-      deliverables: [],
-      client: {
+      // Only include columns that exist in marketplace_projects
+      title: project?.title ?? '',
+      shortDescription: project?.shortDescription ?? '',
+      fullDescription: project?.fullDescription ?? '',
+      category: project?.category ?? '',
+      skills: Array.isArray(project?.skills) ? project.skills : [],
+      budgetMin: typeof project?.budgetMin === 'number' ? project.budgetMin : 0,
+      budgetMax: typeof project?.budgetMax === 'number' ? project.budgetMax : 0,
+      currency: project?.currency ?? 'VND',
+      duration: project?.duration ?? '',
+      deadline: project?.deadline ?? '',
+      isUrgent: !!project?.isUrgent,
+      location: project?.location ?? '',
+      attachments: Array.isArray(project?.attachments) ? project.attachments : [],
+      objectives: Array.isArray(project?.objectives) ? project.objectives : [],
+      technicalRequirements: Array.isArray(project?.technicalRequirements) ? project.technicalRequirements : [],
+      deliverables: Array.isArray(project?.deliverables) ? project.deliverables : [],
+      client: project?.client ?? {
         name: '',
         company: '',
         rating: 0,
         reviewCount: 0,
         location: ''
       },
-      postedAt: now,
-      proposalCount: 0,
-      status: 'active',
-      ...project,
+      proposalCount: typeof project?.proposalCount === 'number' ? project.proposalCount : 0,
+      status: project?.status ?? 'active',
+      client_user_id: clientUserId,
       updated_at: now,
     };
 
     if (project.id) {
       // Update existing project
       const { data, error } = await supabase
-        .from('projects')
+        .from('marketplace_projects')
         .update(projectData)
         .eq('id', project.id)
         .select()
@@ -307,10 +319,11 @@ export const saveProject = async (project) => {
       return data;
     } else {
       // Insert new project
+      // created_at will default in DB; include for completeness
       projectData.created_at = now;
       
       const { data, error } = await supabase
-        .from('projects')
+        .from('marketplace_projects')
         .insert([projectData])
         .select()
         .single();

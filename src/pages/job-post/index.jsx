@@ -247,7 +247,7 @@ const JobPost = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (!validateForm()) {
@@ -278,8 +278,13 @@ const JobPost = () => {
         }))
       };
 
-      const savedProject = saveProject(cleanData);
-      navigate(`/job-details?id=${savedProject.id}`);
+      const savedProject = await saveProject(cleanData);
+      if (savedProject?.id) {
+        navigate(`/job-details?id=${savedProject.id}`);
+      } else {
+        console.error('Project was not saved or missing id:', savedProject);
+        alert('Không thể lưu dự án. Vui lòng thử lại.');
+      }
     } catch (error) {
       console.error('Error saving project:', error);
       alert('Có lỗi xảy ra khi đăng dự án. Vui lòng thử lại.');
