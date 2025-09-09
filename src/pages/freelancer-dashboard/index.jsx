@@ -11,7 +11,6 @@ import RecentFeedback from './components/RecentFeedback';
 import UpcomingDeadlines from './components/UpcomingDeadlines';
 import Icon from '../../components/AppIcon';
 import Button from '../../components/ui/Button';
-import RoleSwitch from '../../components/ui/RoleSwitch';
 import FreelancerManagement from './components/FreelancerManagement';
 import PaymentManagement from './components/PaymentManagement';
 import { ROLES } from '../../utils/constants';
@@ -236,11 +235,7 @@ const FreelancerDashboard = () => {
                   <h1 className="text-3xl font-bold text-foreground">
                     {userRole === 'freelancer' ? 'Bảng điều khiển Freelancer' : 'Bảng điều khiển Client'}
                   </h1>
-                  <RoleSwitch
-                    currentRole={userRole}
-                    onRoleChange={handleRoleChange}
-                    hideRoles={[ROLES.EMPLOYER, ROLES.CANDIDATE]}
-                  />
+                  {/* Role switch removed; role managed globally via header */}
                 </div>
                 <div className="flex items-center space-x-4 text-muted-foreground">
                   <div className="flex items-center space-x-2">

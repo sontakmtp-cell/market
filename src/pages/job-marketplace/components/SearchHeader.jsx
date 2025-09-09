@@ -107,15 +107,6 @@ const SearchHeader = ({
 
           {/* Right Side - Sort & View Controls */}
           <div className="flex items-center space-x-3">
-            {/* Dashboard Button - Only show when authenticated */}
-            {isAuthenticated && (
-              <Link to="/freelancer-dashboard">
-                <Button variant="default" size="sm">
-                  <Icon name="LayoutDashboard" size={16} className="mr-2" />
-                  Dashboard
-                </Button>
-              </Link>
-            )}
             {/* Sort Dropdown */}
             <div className="relative group">
               <Button variant="outline" className="flex items-center space-x-2">
