@@ -11,17 +11,22 @@ import ProposalForm from './components/ProposalForm';
 import ExistingProposals from './components/ExistingProposals';
 import { getProjectById } from '../../utils/dataStore';
 import { useAuth } from '../../hooks/useAuth';
+import { useSupabase } from '../../contexts/SupabaseContext';
 import LoginPrompt from '../../components/LoginPrompt';
 
 const JobDetails = () => {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { isAuthenticated, redirectToLogin } = useAuth();
+  const { isAuthenticated, redirectToLogin, user } = useAuth();
+  const { supabase, user: supabaseUser } = useSupabase();
   const [project, setProject] = useState(null);
+  const [proposals, setProposals] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaved, setIsSaved] = useState(false);
   const [activeSection, setActiveSection] = useState('details');
+  // Check if current user is the job poster (owner)
+  const isOwner = isAuthenticated && user && project?.client_user_id === user.id;
 
   // Mock project data
   const mockProject = {
@@ -101,22 +106,26 @@ const JobDetails = () => {
       {
         name: "Bản vẽ mặt bằng tổng thể.pdf",
         size: "2.4 MB",
-        type: "pdf"
+        type: "pdf",
+        url: null // Will be populated when files are uploaded via job-post
       },
       {
         name: "Yêu cầu kỹ thuật chi tiết.docx",
         size: "856 KB",
-        type: "doc"
+        type: "doc", 
+        url: null
       },
       {
         name: "Khảo sát địa chất.pdf",
         size: "3.1 MB",
-        type: "pdf"
+        type: "pdf",
+        url: null
       },
       {
         name: "Bản vẽ kiến trúc tham khảo.dwg",
-        size: "1.8 MB",
-        type: "dwg"
+        size: "1.8 MB", 
+        type: "dwg",
+        url: null
       }
     ],
     requiredSkills: [
@@ -162,67 +171,7 @@ const JobDetails = () => {
     }
   };
 
-  const mockProposals = [
-    {
-      id: "prop-001",
-      bidAmount: 95000000,
-      timeline: "3 tháng",
-      submittedAt: "2025-01-03T10:30:00Z",
-      coverLetter: "Xin chào, tôi có 8 năm kinh nghiệm thiết kế cấu trúc thép công nghiệp. Đã thực hiện thành công 25+ dự án tương tự với quy mô từ 1000-5000m². Thành thạo SAP2000, ETABS và các tiêu chuẩn TCVN. Cam kết bàn giao đúng tiến độ với chất lượng cao nhất.",
-      portfolioSamples: [
-        { name: "Portfolio_Steel_Design.pdf", size: "4.2 MB" },
-        { name: "Previous_Factory_Project.dwg", size: "2.8 MB" }
-      ],
-      freelancer: {
-        name: "Trần Minh Đức",
-        avatar: "https://randomuser.me/api/portraits/men/32.jpg",
-        rating: 4.9,
-        reviewCount: 47,
-        completedJobs: 28,
-        isVerified: true,
-        skills: ["SAP2000", "ETABS", "AutoCAD", "Thiết kế thép", "TCVN", "Revit"]
-      }
-    },
-    {
-      id: "prop-002",
-      bidAmount: 88000000,
-      timeline: "3.5 tháng",
-      submittedAt: "2025-01-03T14:15:00Z",
-      coverLetter: "Chào anh/chị, tôi là kỹ sư cấu trúc với 6 năm kinh nghiệm chuyên về thiết kế công nghiệp. Đã tham gia thiết kế nhiều nhà máy, kho xưởng lớn. Sử dụng thành thạo các phần mềm chuyên dụng và nắm vững các quy chuẩn Việt Nam.",
-      portfolioSamples: [
-        { name: "Industrial_Projects_2024.pdf", size: "6.1 MB" }
-      ],
-      freelancer: {
-        name: "Lê Thị Hương",
-        avatar: "https://randomuser.me/api/portraits/women/28.jpg",
-        rating: 4.7,
-        reviewCount: 31,
-        completedJobs: 19,
-        isVerified: true,
-        skills: ["SAP2000", "AutoCAD", "Thiết kế kết cấu", "TCVN 5575", "Tekla"]
-      }
-    },
-    {
-      id: "prop-003",
-      bidAmount: 110000000,
-      timeline: "2.5 tháng",
-      submittedAt: "2025-01-02T16:45:00Z",
-      coverLetter: "Kính chào Quý khách hàng, với 12 năm kinh nghiệm trong lĩnh vực thiết kế cấu trúc thép, tôi đã thực hiện thành công hơn 50 dự án công nghiệp. Đặc biệt có kinh nghiệm với các dự án có quy mô lớn và yêu cầu kỹ thuật cao.",
-      portfolioSamples: [
-        { name: "Senior_Engineer_Portfolio.pdf", size: "8.5 MB" },
-        { name: "Factory_Design_Samples.zip", size: "12.3 MB" }
-      ],
-      freelancer: {
-        name: "Phạm Văn Thành",
-        avatar: "https://randomuser.me/api/portraits/men/55.jpg",
-        rating: 5.0,
-        reviewCount: 68,
-        completedJobs: 52,
-        isVerified: true,
-        skills: ["SAP2000", "ETABS", "STAAD Pro", "AutoCAD", "Revit", "Tekla", "TCVN", "Thiết kế chống động đất"]
-      }
-    }
-  ];
+  // Helper function to calculate time ago
 
   useEffect(() => {
     const fetchProject = async () => {
@@ -276,6 +225,71 @@ const JobDetails = () => {
     fetchProject();
   }, [id, searchParams, isAuthenticated]);
 
+  // Fetch proposals from Supabase
+  useEffect(() => {
+    const fetchProposals = async () => {
+      if (!project?.id || !supabase) {
+        console.log('Skipping proposals fetch - missing project ID or Supabase client');
+        return;
+      }
+
+      try {
+        console.log('Fetching proposals for project:', project.id);
+        
+        // Simplified query without join first
+        const { data, error } = await supabase
+          .from('proposals')
+          .select('*')
+          .eq('project_id', project.id)
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.error('Error fetching proposals:', error);
+          console.error('Error details:', {
+            message: error.message,
+            details: error.details,
+            hint: error.hint,
+            code: error.code
+          });
+          // Don't return, continue with empty array
+          setProposals([]);
+          return;
+        }
+
+        console.log('Raw proposals data from Supabase:', data);
+
+        // Map proposals data to expected format with mock freelancer info
+        const mappedProposals = data?.map(proposal => ({
+          id: proposal.id,
+          freelancerId: proposal.freelancer_id, // Add freelancer ID for ownership check
+          bidAmount: proposal.bid_amount,
+          timeline: proposal.timeline,
+          submittedAt: proposal.created_at,
+          coverLetter: proposal.cover_letter,
+          status: proposal.status,
+          portfolioSamples: [], // Add if you have portfolio data
+          freelancer: {
+            name: 'Freelancer', // Mock data for now
+            avatar: 'https://randomuser.me/api/portraits/men/32.jpg',
+            rating: 4.5,
+            reviewCount: 10,
+            completedJobs: 5,
+            isVerified: false,
+            skills: ['Programming', 'Design']
+          }
+        })) || [];
+
+        setProposals(mappedProposals);
+        console.log('Proposals fetched successfully:', mappedProposals);
+      } catch (error) {
+        console.error('Unexpected error fetching proposals:', error);
+        setProposals([]); // Fallback to empty array
+      }
+    };
+
+    fetchProposals();
+  }, [project?.id, supabase]);
+
   // Helper function to calculate time ago
   const getTimeAgo = (dateString) => {
     const now = new Date();
@@ -324,14 +338,111 @@ const JobDetails = () => {
       return;
     }
 
-    // Simulate proposal submission
-    console.log('Submitting proposal:', proposalData);
-    
-    // Show success message (in real app, would show toast/notification)
-    alert('Đề xuất đã được gửi thành công!');
-    
-    // Scroll to proposals section
-    setActiveSection('proposals');
+    // Check if Supabase is available
+    if (!supabase) {
+      alert('Dịch vụ đang bảo trì. Vui lòng thử lại sau!');
+      console.error('Supabase client not available');
+      return;
+    }
+
+    if (!supabaseUser || !project?.id) {
+      alert('Có lỗi xảy ra. Vui lòng thử lại!');
+      console.error('Missing user or project data:', { user: !!supabaseUser, projectId: project?.id });
+      return;
+    }
+
+    try {
+      console.log('Submitting proposal with data:', proposalData);
+      console.log('Project ID:', project.id);
+      console.log('User ID:', supabaseUser.id);
+
+      // Create proposal object matching database schema
+      const newProposal = {
+        project_id: String(project.id), // Ensure it's a string
+        freelancer_id: String(supabaseUser.id), // Ensure it's a string
+        bid_amount: parseFloat(proposalData.bidAmount),
+        timeline: String(proposalData.timeline || ''),
+        cover_letter: String(proposalData.coverLetter || ''),
+        status: 'submitted'
+      };
+
+      console.log('New proposal object:', newProposal);
+
+      // Validate required fields
+      if (!newProposal.project_id || !newProposal.freelancer_id || !newProposal.bid_amount) {
+        alert('Vui lòng điền đầy đủ thông tin bắt buộc!');
+        return;
+      }
+
+      // Insert proposal into Supabase with simplified query
+      const { data, error } = await supabase
+        .from('proposals')
+        .insert([newProposal])
+        .select();
+
+      if (error) {
+        console.error('Supabase error details:', error);
+        console.error('Error breakdown:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
+        
+        // Provide more specific error messages
+        let userMessage = 'Có lỗi xảy ra khi gửi đề xuất.';
+        if (error.code === '23503') {
+          userMessage = 'Lỗi liên kết dữ liệu. Vui lòng đăng nhập lại.';
+        } else if (error.code === '42501') {
+          userMessage = 'Bạn không có quyền thực hiện thao tác này.';
+        }
+        
+        alert(`${userMessage} Chi tiết: ${error.message}`);
+        return;
+      }
+
+      console.log('Proposal inserted successfully:', data);
+
+      if (data && data.length > 0) {
+        // Map the new proposal to the expected format
+        const mappedProposal = {
+          id: data[0].id,
+          freelancerId: data[0].freelancer_id, // Add freelancer ID for ownership check
+          bidAmount: data[0].bid_amount,
+          timeline: data[0].timeline,
+          submittedAt: data[0].created_at,
+          coverLetter: data[0].cover_letter,
+          status: data[0].status,
+          portfolioSamples: [], // Add portfolio files if implemented
+          freelancer: {
+            name: supabaseUser.user_metadata?.full_name || 'Bạn',
+            avatar: supabaseUser.user_metadata?.avatar_url || 'https://randomuser.me/api/portraits/men/32.jpg',
+            rating: 4.5, // Default rating
+            reviewCount: 0,
+            completedJobs: 0,
+            isVerified: false,
+            skills: []
+          }
+        };
+
+        // Add proposal to state for immediate UI update
+        setProposals(prev => [mappedProposal, ...prev]);
+
+        // Show success message
+        alert('Đề xuất đã được gửi thành công!');
+        
+        // Scroll to proposals section
+        setActiveSection('proposals');
+      }
+    } catch (error) {
+      console.error('Unexpected error submitting proposal:', error);
+      alert('Có lỗi không mong muốn xảy ra. Vui lòng thử lại!');
+    }
+  };
+
+  const handleProposalDeleted = (deletedProposalId) => {
+    // Remove the deleted proposal from the state
+    setProposals(prev => prev.filter(proposal => proposal.id !== deletedProposalId));
   };
 
   const handleBackToMarketplace = () => {
@@ -415,7 +526,8 @@ const JobDetails = () => {
                     { id: 'details', label: 'Chi tiết dự án', icon: 'FileText' },
                     { id: 'proposals', label: 'Đề xuất hiện tại', icon: 'Users', requiresAuth: false },
                     { id: 'submit', label: 'Gửi đề xuất', icon: 'Send', requiresAuth: true }
-                  ]?.map((section) => (
+                  ]?.filter((section) => !(section.id === 'submit' && isOwner))
+                    .map((section) => (
                     <button
                       key={section?.id}
                       onClick={() => {
@@ -448,10 +560,13 @@ const JobDetails = () => {
               )}
 
               {activeSection === 'proposals' && (
-                <ExistingProposals proposals={mockProposals} />
+                <ExistingProposals 
+                  proposals={proposals} 
+                  onProposalDeleted={handleProposalDeleted}
+                />
               )}
 
-              {activeSection === 'submit' && (
+              {activeSection === 'submit' && !isOwner && (
                 isAuthenticated ? (
                   <ProposalForm onSubmitProposal={handleSubmitProposal} />
                 ) : (

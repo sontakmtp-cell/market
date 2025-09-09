@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
+import { useAuth } from '../../../hooks/useAuth';
 
 const ProjectDetails = ({ project }) => {
+  const { isAuthenticated } = useAuth();
   const [activeTab, setActiveTab] = useState('description');
 
   const tabs = [
@@ -87,30 +89,66 @@ const ProjectDetails = ({ project }) => {
           <div className="space-y-4">
             <div>
               <h3 className="font-semibold text-foreground mb-3">Tài liệu tham khảo</h3>
-              <div className="grid gap-3">
-                {project?.referenceFiles?.map((file, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                        <Icon name={file?.type === 'pdf' ? 'FileText' : file?.type === 'dwg' ? 'FileImage' : 'File'} size={20} className="text-primary" />
+              {!project?.referenceFiles || project.referenceFiles.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Icon name="FileX" size={48} className="mx-auto mb-2 opacity-50" />
+                  <p>Không có tài liệu tham khảo</p>
+                </div>
+              ) : (
+                <div className="grid gap-3">
+                  {project.referenceFiles.map((file, index) => (
+                    <div key={index} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                          <Icon name={file?.type === 'pdf' ? 'FileText' : file?.type === 'dwg' ? 'FileImage' : 'File'} size={20} className="text-primary" />
+                        </div>
+                        <div>
+                          <h4 className="font-medium text-foreground">{file?.name}</h4>
+                          <p className="text-sm text-muted-foreground">{file?.size} · {file?.type?.toUpperCase()}</p>
+                        </div>
                       </div>
-                      <div>
-                        <h4 className="font-medium text-foreground">{file?.name}</h4>
-                        <p className="text-sm text-muted-foreground">{file?.size} · {file?.type?.toUpperCase()}</p>
-                      </div>
+                      {file?.url ? (
+                        <Button 
+                          asChild={isAuthenticated} 
+                          variant="ghost" 
+                          size="sm" 
+                          iconName="Download" 
+                          iconPosition="left"
+                          disabled={!isAuthenticated}
+                          title={!isAuthenticated ? "Đăng nhập để tải xuống tài liệu" : "Tải xuống"}
+                        >
+                          {isAuthenticated ? (
+                            <a 
+                              href={file.url} 
+                              download={file.name}
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-2"
+                            >
+                              Tải xuống
+                            </a>
+                          ) : (
+                            <span className="flex items-center gap-2">
+                              Tải xuống
+                            </span>
+                          )}
+                        </Button>
+                      ) : (
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          iconName="Download" 
+                          iconPosition="left" 
+                          disabled 
+                          title="Không có file để tải"
+                        >
+                          Tải xuống
+                        </Button>
+                      )}
                     </div>
-                    {file?.url ? (
-                      <Button asChild variant="ghost" size="sm" iconName="Download" iconPosition="left">
-                        <a href={file.url} download target="_blank" rel="noopener noreferrer">Tải xuống</a>
-                      </Button>
-                    ) : (
-                      <Button variant="ghost" size="sm" iconName="Download" iconPosition="left" disabled title="Không có file để tải">
-                        Tải xuống
-                      </Button>
-                    )}
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         );
