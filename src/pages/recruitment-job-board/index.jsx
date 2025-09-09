@@ -54,7 +54,7 @@ const RecruitmentJobBoard = () => {
       salaryMax: Number(j.salaryMax) || null,
       currency: j.currency || 'VND',
       deadline: j.applicationDeadline || j.deadline || null,
-      createdAt: j.createdAt || new Date().toISOString(),
+      createdAt: j.created_at || new Date().toISOString(),
     }));
   }, [jobs]);
 

@@ -50,21 +50,45 @@ export const saveRecruitmentJob = async (job) => {
     const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
     if (sessionError) {
       console.error('Error getting session:', sessionError);
-      return null;
+      return { data: null, error: sessionError };
     }
 
     const userId = sessionData?.session?.user?.id;
     if (!userId) {
       console.error('No authenticated user found. Cannot save recruitment job.');
-      return null;
+      return { data: null, error: { message: 'Authentication required' } };
     }
 
-    // 2) Chuẩn bị dữ liệu cần lưu (kèm user_id và updated_at)
+    // 2) Chuẩn bị dữ liệu cần lưu (mapping với schema camelCase)
     const now = new Date().toISOString();
     const dataToSave = {
       ...(job?.id ? { id: job.id } : {}),
-      ...job,
       user_id: userId,
+      title: job.title || '',
+      department: job.department || '',
+      location: job.location || '',
+      locationType: job.locationType || 'remote',
+      employmentType: job.employmentType || 'full-time',
+      experienceLevel: job.experienceLevel || 'mid',
+      description: job.description || '',
+      responsibilities: job.responsibilities || '',
+      requirements: job.requirements || '',
+      // templateType: job.templateType || '', // Removed - column doesn't exist in DB
+      skills: Array.isArray(job.skills) ? job.skills : [],
+      certifications: Array.isArray(job.certifications) ? job.certifications : [],
+      salaryMin: job.salaryMin ? parseInt(job.salaryMin) : null,
+      salaryMax: job.salaryMax ? parseInt(job.salaryMax) : null,
+      currency: job.currency || 'VND',
+      showSalary: !!job.showSalary,
+      benefits: Array.isArray(job.benefits) ? job.benefits : [],
+      contractTerms: job.contractTerms || '',
+      applicationDeadline: job.applicationDeadline || null,
+      screeningQuestions: Array.isArray(job.screeningQuestions) ? job.screeningQuestions : [],
+      autoResponse: !!job.autoResponse,
+      responseTemplate: job.responseTemplate || '',
+      attachments: Array.isArray(job.attachments) ? job.attachments : [],
+      companyMaterials: Array.isArray(job.companyMaterials) ? job.companyMaterials : [],
+      status: job.status || 'active',
       updated_at: now,
     };
 
@@ -77,13 +101,13 @@ export const saveRecruitmentJob = async (job) => {
 
     if (error) {
       console.error('Error upserting recruitment job:', error);
-      return null;
+      return { data: null, error };
     }
 
-    return data;
+    return { data, error: null };
   } catch (e) {
     console.error('Unexpected error saving recruitment job:', e);
-    return null;
+    return { data: null, error: { message: e.message } };
   }
 };
 

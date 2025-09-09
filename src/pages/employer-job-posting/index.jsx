@@ -203,7 +203,7 @@ const EmployerJobPosting = () => {
     setIsDraft(true);
   };
 
-  // Persist via localStorage dataStore and navigate to dashboard
+  // Persist via Supabase dataStore and navigate to dashboard
   const handleSubmitRecruitment = async () => {
     // Validate all sections first using existing logic
     let hasErrors = false;
@@ -219,7 +219,7 @@ const EmployerJobPosting = () => {
 
     setLoading(true);
     try {
-      const saved = saveRecruitmentJob({
+      const { data, error } = await saveRecruitmentJob({
         title: formData.title,
         department: formData.department,
         location: formData.location,
@@ -229,7 +229,7 @@ const EmployerJobPosting = () => {
         description: formData.description,
         responsibilities: formData.responsibilities,
         requirements: formData.requirements,
-        templateType: formData.templateType,
+        // templateType: formData.templateType, // Temporarily disabled - column doesn't exist
         skills: formData.skills,
         certifications: formData.certifications,
         salaryMin: formData.salaryMin,
@@ -247,12 +247,22 @@ const EmployerJobPosting = () => {
         status: 'active',
       });
 
-      localStorage.removeItem('job-posting-draft');
-      alert('Tin tuyển dụng đã được đăng thành công!');
-      // Go to dashboard to manage applications
-      navigate('/recruitment-management-dashboard');
+      if (error) {
+        console.error('Error saving job:', error);
+        alert('Có lỗi xảy ra khi đăng tin: ' + (error.message || 'Unknown error'));
+        return;
+      }
+
+      if (data) {
+        localStorage.removeItem('job-posting-draft');
+        alert('Tin tuyển dụng đã được đăng thành công!');
+        // Go to dashboard to manage applications
+        navigate('/recruitment-management-dashboard');
+      } else {
+        alert('Có lỗi xảy ra khi đăng tin. Vui lòng thử lại.');
+      }
     } catch (e) {
-      console.error('Error saving job', e);
+      console.error('Unexpected error saving job:', e);
       alert('Có lỗi xảy ra khi đăng tin. Vui lòng thử lại.');
     } finally {
       setLoading(false);
