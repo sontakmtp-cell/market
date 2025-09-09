@@ -8,7 +8,7 @@ const genId = (prefix = 'id') => `${prefix}_${Date.now()}_${Math.random().toStri
 export const getRecruitmentJobs = async () => {
   try {
     const { data, error } = await supabase
-      .from('jobs')
+      .from('recruitment_jobs')
       .select('*')
       .order('created_at', { ascending: false });
     
@@ -27,7 +27,7 @@ export const getRecruitmentJobs = async () => {
 export const getRecruitmentJobById = async (id) => {
   try {
     const { data, error } = await supabase
-      .from('jobs')
+      .from('recruitment_jobs')
       .select('*')
       .eq('id', id)
       .single();
@@ -262,12 +262,12 @@ export const saveProject = async (project) => {
     const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
     if (sessionError) {
       console.error('Error getting session:', sessionError);
-      return null;
+      throw new Error('Authentication required. Please log in first.');
     }
     const clientUserId = sessionData?.session?.user?.id || null;
     if (!clientUserId) {
       console.error('No authenticated user. Cannot save project.');
-      return null;
+      throw new Error('Authentication required. Please log in to save projects.');
     }
 
     const now = new Date().toISOString();
@@ -313,7 +313,10 @@ export const saveProject = async (project) => {
       
       if (error) {
         console.error('Error updating project:', error);
-        return null;
+        if (error.code === 'PGRST116') {
+          throw new Error('Row Level Security violation. You can only update your own projects.');
+        }
+        throw new Error(`Failed to update project: ${error.message}`);
       }
       
       return data;
@@ -330,13 +333,22 @@ export const saveProject = async (project) => {
       
       if (error) {
         console.error('Error creating project:', error);
-        return null;
+        if (error.code === 'PGRST116') {
+          throw new Error('Row Level Security violation. Please check your authentication.');
+        }
+        if (error.code === '23503') {
+          throw new Error('Database constraint violation. Please check your data.');
+        }
+        throw new Error(`Failed to create project: ${error.message}`);
       }
       
       return data;
     }
   } catch (e) {
     console.error('Unexpected error saving project:', e);
-    return null;
+    if (e.message.includes('Authentication required') || e.message.includes('Row Level Security')) {
+      throw e; // Re-throw auth errors with original message
+    }
+    throw new Error(`Failed to save project: ${e.message}`);
   }
 };

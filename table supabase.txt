@@ -93,6 +93,39 @@ CREATE TABLE public.marketplace_projects (
 ALTER TABLE public.marketplace_projects ENABLE ROW LEVEL SECURITY;
 
 
+-- =========== BẢNG 4: APPLICATIONS (Lưu đơn ứng tuyển) ===========
+-- Bảng này sẽ lưu trữ các đơn ứng tuyển cho các vị trí tuyển dụng
+
+CREATE TABLE public.applications (
+  id bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  created_at timestamptz DEFAULT now() NOT NULL,
+  updated_at timestamptz,
+  "jobId" bigint REFERENCES public.recruitment_jobs(id) ON DELETE CASCADE,
+  user_id uuid REFERENCES auth.users(id) ON DELETE SET NULL,
+  "fullName" text,
+  email text,
+  phone text,
+  address text,
+  linkedin text,
+  github text,
+  portfolio text,
+  summary text,
+  "technicalSkills" jsonb,
+  certifications text[],
+  "experienceLevel" text,
+  cv jsonb,
+  "coverLetter" text,
+  "portfolioFile" jsonb,
+  certificates jsonb[],
+  "customAnswers" jsonb,
+  "applicationDate" timestamptz DEFAULT now(),
+  status text DEFAULT 'submitted'
+);
+
+-- Bật Row Level Security (RLS) cho bảng applications
+ALTER TABLE public.applications ENABLE ROW LEVEL SECURITY;
+
+
 -- =========== TỰ ĐỘNG HÓA: TẠO PROFILE KHI CÓ USER MỚI ===========
 -- 1. Tạo Function (bản hướng dẫn)
 create or replace function public.handle_new_user()
@@ -111,3 +144,68 @@ $$;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
+
+
+-- =========== RLS POLICIES (Bảo mật hàng) ===========
+
+-- Policies cho bảng profiles
+CREATE POLICY "Users can view public profiles" ON public.profiles
+  FOR SELECT USING (true);
+
+CREATE POLICY "Users can update own profile" ON public.profiles
+  FOR UPDATE USING (auth.uid() = id);
+
+CREATE POLICY "Users can insert own profile" ON public.profiles
+  FOR INSERT WITH CHECK (auth.uid() = id);
+
+-- Policies cho bảng recruitment_jobs
+CREATE POLICY "Anyone can view active recruitment jobs" ON public.recruitment_jobs
+  FOR SELECT USING (status = 'active');
+
+CREATE POLICY "Users can create recruitment jobs" ON public.recruitment_jobs
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own recruitment jobs" ON public.recruitment_jobs
+  FOR UPDATE USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete own recruitment jobs" ON public.recruitment_jobs
+  FOR DELETE USING (auth.uid() = user_id);
+
+-- Policies cho bảng marketplace_projects
+CREATE POLICY "Anyone can view active projects" ON public.marketplace_projects
+  FOR SELECT USING (status = 'active');
+
+CREATE POLICY "Users can create projects" ON public.marketplace_projects
+  FOR INSERT WITH CHECK (auth.uid() = client_user_id);
+
+CREATE POLICY "Users can update own projects" ON public.marketplace_projects
+  FOR UPDATE USING (auth.uid() = client_user_id);
+
+CREATE POLICY "Users can delete own projects" ON public.marketplace_projects
+  FOR DELETE USING (auth.uid() = client_user_id);
+
+-- Policies cho bảng applications
+CREATE POLICY "Users can view applications for their jobs" ON public.applications
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM public.recruitment_jobs 
+      WHERE recruitment_jobs.id = applications."jobId" 
+      AND recruitment_jobs.user_id = auth.uid()
+    )
+    OR auth.uid() = user_id
+  );
+
+CREATE POLICY "Users can create applications" ON public.applications
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own applications" ON public.applications
+  FOR UPDATE USING (auth.uid() = user_id);
+
+CREATE POLICY "Job owners can update application status" ON public.applications
+  FOR UPDATE USING (
+    EXISTS (
+      SELECT 1 FROM public.recruitment_jobs 
+      WHERE recruitment_jobs.id = applications."jobId" 
+      AND recruitment_jobs.user_id = auth.uid()
+    )
+  );
