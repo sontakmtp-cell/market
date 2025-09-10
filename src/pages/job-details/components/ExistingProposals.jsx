@@ -6,12 +6,15 @@ import ConfirmModal from '../../../components/ui/ConfirmModal';
 import { useAuth } from '../../../hooks/useAuth';
 import { useSupabase } from '../../../contexts/SupabaseContext';
 
-const ExistingProposals = ({ proposals = [], onProposalDeleted, onShowNotification }) => {
+const ExistingProposals = ({ proposals = [], onProposalDeleted, onShowNotification, isOwner = false, project = null }) => {
   const [sortBy, setSortBy] = useState('recent');
   const [showAll, setShowAll] = useState(false);
   const [deletingProposalId, setDeletingProposalId] = useState(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [proposalToDelete, setProposalToDelete] = useState(null);
+  const [acceptingProposalId, setAcceptingProposalId] = useState(null);
+  const [showAcceptModal, setShowAcceptModal] = useState(false);
+  const [proposalToAccept, setProposalToAccept] = useState(null);
   const { user } = useAuth();
   const { supabase } = useSupabase();
 
@@ -50,6 +53,65 @@ const ExistingProposals = ({ proposals = [], onProposalDeleted, onShowNotificati
     if (diffInHours < 24) return `${diffInHours} giờ trước`;
     const diffInDays = Math.floor(diffInHours / 24);
     return `${diffInDays} ngày trước`;
+  };
+
+  const handleAcceptProposal = async (proposalId) => {
+    if (!supabase || !user) {
+      if (onShowNotification) {
+        onShowNotification('Lỗi hệ thống. Vui lòng thử lại sau!', 'error');
+      }
+      return;
+    }
+
+    // Show confirmation modal
+    setProposalToAccept(proposalId);
+    setShowAcceptModal(true);
+  };
+
+  const handleConfirmAccept = async () => {
+    if (!proposalToAccept) return;
+
+    setAcceptingProposalId(proposalToAccept);
+    setShowAcceptModal(false);
+
+    try {
+      // Update proposal status to accepted
+      const { error } = await supabase
+        .from('proposals')
+        .update({ status: 'accepted' })
+        .eq('id', proposalToAccept);
+
+      if (error) {
+        console.error('Error accepting proposal:', error);
+        if (onShowNotification) {
+          onShowNotification('Có lỗi xảy ra khi chấp nhận đề xuất. Vui lòng thử lại!', 'error');
+        }
+        return;
+      }
+
+      // TODO: Add logic to:
+      // 1. Update project status to 'in_progress' or 'assigned'
+      // 2. Reject other proposals for this project
+      // 3. Create contract/agreement record
+      // 4. Send notification to freelancer
+
+      if (onShowNotification) {
+        onShowNotification('Đề xuất đã được chấp nhận thành công!', 'success');
+      }
+    } catch (error) {
+      console.error('Unexpected error accepting proposal:', error);
+      if (onShowNotification) {
+        onShowNotification('Có lỗi không mong muốn xảy ra. Vui lòng thử lại!', 'error');
+      }
+    } finally {
+      setAcceptingProposalId(null);
+      setProposalToAccept(null);
+    }
+  };
+
+  const handleCancelAccept = () => {
+    setShowAcceptModal(false);
+    setProposalToAccept(null);
   };
 
   const handleDeleteProposal = async (proposalId) => {
@@ -159,7 +221,9 @@ const ExistingProposals = ({ proposals = [], onProposalDeleted, onShowNotificati
               const isProposalOwner = user && proposal?.freelancerId === user.id;
               
               return (
-                <div key={proposal?.id} className="border border-border rounded-lg p-4 hover:bg-muted/20 transition-colors">
+                <div key={proposal?.id} className={`border border-border rounded-lg p-4 hover:bg-muted/20 transition-colors ${
+                  proposal?.status === 'accepted' ? 'bg-success/5 border-success/30' : ''
+                }`}>
                   <div className="flex flex-col lg:flex-row lg:items-start gap-4">
                     {/* Freelancer Info */}
                     <div className="flex items-start gap-3 flex-1">
@@ -177,7 +241,13 @@ const ExistingProposals = ({ proposals = [], onProposalDeleted, onShowNotificati
                           {proposal?.freelancer?.isVerified && (
                             <Icon name="BadgeCheck" size={16} className="text-primary" />
                           )}
-                          {isProposalOwner && (
+                          {proposal?.status === 'accepted' && (
+                            <span className="bg-success text-white px-2 py-1 rounded text-xs font-medium flex items-center gap-1">
+                              <Icon name="Check" size={12} />
+                              Đã chấp nhận
+                            </span>
+                          )}
+                          {isProposalOwner && proposal?.status !== 'accepted' && (
                             <span className="bg-primary/10 text-primary px-2 py-1 rounded text-xs font-medium">
                               Đề xuất của bạn
                             </span>
@@ -238,6 +308,25 @@ const ExistingProposals = ({ proposals = [], onProposalDeleted, onShowNotificati
                         <Button variant="ghost" size="sm" fullWidth iconName="MessageSquare" iconPosition="left">
                           Nhắn tin
                         </Button>
+                        {isOwner && proposal?.status !== 'accepted' && (
+                          <Button 
+                            variant="default" 
+                            size="sm" 
+                            fullWidth 
+                            iconName="Check" 
+                            iconPosition="left"
+                            onClick={() => handleAcceptProposal(proposal?.id)}
+                            disabled={acceptingProposalId === proposal?.id}
+                            className="bg-success hover:bg-success/90 text-white"
+                          >
+                            {acceptingProposalId === proposal?.id ? 'Đang xử lý...' : 'Chấp nhận đề xuất'}
+                          </Button>
+                        )}
+                        {proposal?.status === 'accepted' && (
+                          <div className="px-3 py-2 bg-success/10 text-success rounded-md text-sm font-medium text-center">
+                            ✓ Đã chấp nhận
+                          </div>
+                        )}
                         {isProposalOwner && (
                           <Button 
                             variant="destructive" 
@@ -294,7 +383,7 @@ const ExistingProposals = ({ proposals = [], onProposalDeleted, onShowNotificati
         </>
       )}
 
-      {/* Confirmation Modal */}
+      {/* Confirmation Modal for Delete */}
       <ConfirmModal
         isOpen={showConfirmModal}
         onClose={handleCancelDelete}
@@ -305,6 +394,19 @@ const ExistingProposals = ({ proposals = [], onProposalDeleted, onShowNotificati
         cancelText="Hủy bỏ"
         type="danger"
         isLoading={deletingProposalId === proposalToDelete}
+      />
+
+      {/* Confirmation Modal for Accept */}
+      <ConfirmModal
+        isOpen={showAcceptModal}
+        onClose={handleCancelAccept}
+        onConfirm={handleConfirmAccept}
+        title="Xác nhận chấp nhận đề xuất"
+        message="Bạn có chắc chắn muốn chấp nhận đề xuất này? Sau khi chấp nhận, dự án sẽ được giao cho freelancer này và các đề xuất khác sẽ bị từ chối."
+        confirmText="Chấp nhận đề xuất"
+        cancelText="Hủy bỏ"
+        type="success"
+        isLoading={acceptingProposalId === proposalToAccept}
       />
     </div>
   );

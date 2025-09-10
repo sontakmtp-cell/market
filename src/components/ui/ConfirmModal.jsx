@@ -10,7 +10,7 @@ const ConfirmModal = ({
   message = "Bạn có chắc chắn muốn thực hiện hành động này?",
   confirmText = "Xác nhận",
   cancelText = "Hủy bỏ",
-  type = "warning", // warning, danger, info
+  type = "warning", // warning, danger, info, success
   isLoading = false
 }) => {
   if (!isOpen) return null;
@@ -22,6 +22,12 @@ const ConfirmModal = ({
           icon: 'AlertTriangle',
           iconColor: 'text-red-500',
           confirmVariant: 'destructive'
+        };
+      case 'success':
+        return {
+          icon: 'CheckCircle',
+          iconColor: 'text-green-500',
+          confirmVariant: 'default'
         };
       case 'warning':
         return {

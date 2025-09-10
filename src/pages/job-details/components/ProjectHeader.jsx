@@ -2,16 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
+import ConfirmModal from '../../../components/ui/ConfirmModal';
 import { useAuth } from '../../../hooks/useAuth';
 import { useSupabase } from '../../../contexts/SupabaseContext';
 import { saveJob, unsaveJob, checkIfJobSaved } from '../../../services/jobService';
 
-const ProjectHeader = ({ project, onShowNotification }) => {
+const ProjectHeader = ({ project, onShowNotification, onProjectDeleted }) => {
   const { isAuthenticated } = useAuth();
-  const { user } = useSupabase();
+  const { user, supabase } = useSupabase();
   const navigate = useNavigate();
   const [isSaved, setIsSaved] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   // Check if current user is the project owner
   const isOwner = isAuthenticated && user && project?.client_user_id === user.id;
@@ -34,6 +37,55 @@ const ProjectHeader = ({ project, onShowNotification }) => {
   
   const handleEditProject = () => {
     navigate(`/job-post/edit/${project?.id}`);
+  };
+
+  const handleDeleteProject = async () => {
+    if (!supabase || !user || !project?.id) {
+      if (onShowNotification) {
+        onShowNotification('Lỗi hệ thống. Vui lòng thử lại sau!', 'error');
+      }
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      // Delete project from Supabase
+      const { error } = await supabase
+        .from('projects')
+        .delete()
+        .eq('id', project.id)
+        .eq('client_user_id', user.id); // Extra security check
+
+      if (error) {
+        console.error('Error deleting project:', error);
+        if (onShowNotification) {
+          onShowNotification('Có lỗi xảy ra khi xóa dự án. Vui lòng thử lại!', 'error');
+        }
+        return;
+      }
+
+      if (onShowNotification) {
+        onShowNotification('Dự án đã được xóa thành công!', 'success');
+      }
+
+      // Notify parent component
+      if (onProjectDeleted) {
+        onProjectDeleted(project.id);
+      }
+
+      // Redirect to job marketplace after a short delay
+      setTimeout(() => {
+        navigate('/job-marketplace');
+      }, 1500);
+    } catch (error) {
+      console.error('Unexpected error deleting project:', error);
+      if (onShowNotification) {
+        onShowNotification('Có lỗi không mong muốn xảy ra. Vui lòng thử lại!', 'error');
+      }
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteModal(false);
+    }
   };
 
   const handleSaveJob = async () => {
@@ -118,14 +170,25 @@ const ProjectHeader = ({ project, onShowNotification }) => {
         
         <div className="flex flex-col sm:flex-row lg:flex-col gap-3">
           {isOwner && (
-            <Button
-              onClick={handleEditProject}
-              iconName="Edit"
-              iconPosition="left"
-              className="bg-primary text-white hover:bg-primary/90"
-            >
-              Chỉnh sửa dự án
-            </Button>
+            <>
+              <Button
+                onClick={handleEditProject}
+                iconName="Edit"
+                iconPosition="left"
+                className="bg-primary text-white hover:bg-primary/90"
+              >
+                Chỉnh sửa dự án
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => setShowDeleteModal(true)}
+                iconName="Trash2"
+                iconPosition="left"
+                disabled={isDeleting}
+              >
+                {isDeleting ? 'Đang xóa...' : 'Xóa dự án'}
+              </Button>
+            </>
           )}
           {!isOwner && (
             <Button
@@ -149,6 +212,19 @@ const ProjectHeader = ({ project, onShowNotification }) => {
           </Button>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDeleteProject}
+        title="Xác nhận xóa dự án"
+        message="Bạn có chắc chắn muốn xóa dự án này? Hành động này không thể hoàn tác và sẽ xóa tất cả các đề xuất liên quan."
+        confirmText="Xóa dự án"
+        cancelText="Hủy bỏ"
+        type="danger"
+        isLoading={isDeleting}
+      />
     </div>
   );
 };
