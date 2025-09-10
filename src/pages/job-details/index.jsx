@@ -448,6 +448,11 @@ const JobDetails = () => {
     setProposals(prev => prev.filter(proposal => proposal.id !== deletedProposalId));
   };
 
+  const handleProjectDeleted = (deletedProjectId) => {
+    // Project deleted, will redirect to marketplace in ProjectHeader
+    console.log('Project deleted:', deletedProjectId);
+  };
+
   const handleBackToMarketplace = () => {
     navigate('/job-marketplace');
   };
@@ -516,6 +521,12 @@ const JobDetails = () => {
             project={project}
             onSaveJob={handleSaveJob}
             isSaved={isSaved}
+            onShowNotification={(message, type) => {
+              if (type === 'success') showSuccess(message);
+              else if (type === 'error') showError(message);
+              else if (type === 'warning') showWarning(message);
+            }}
+            onProjectDeleted={handleProjectDeleted}
           />
 
           {/* Main Content */}
@@ -572,6 +583,8 @@ const JobDetails = () => {
                     else if (type === 'warning') showWarning(message);
                     else showInfo(message);
                   }}
+                  isOwner={isOwner}
+                  project={project}
                 />
               )}
 
