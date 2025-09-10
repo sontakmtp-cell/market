@@ -4,7 +4,7 @@ import Header from '../../components/ui/Header';
 import MetricsCard from './components/MetricsCard';
 import ProjectCard from './components/ProjectCard';
 import NotificationCenter from './components/NotificationCenter';
-import RecommendedJobs from './components/RecommendedJobs';
+import SavedJobs from './components/SavedJobs';
 import EarningsChart from './components/EarningsChart';
 import QuickActions from './components/QuickActions';
 import RecentFeedback from './components/RecentFeedback';
@@ -328,8 +328,8 @@ const FreelancerDashboard = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             {userRole === 'freelancer' ? (
               <>
-                <RecommendedJobs />
                 <RecentFeedback />
+                <SavedJobs />
               </>
             ) : (
               <>

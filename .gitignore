@@ -8,3 +8,21 @@ vite.config.*s.*
 .env
 .env.local
 .env.*.local
+
+# Debug và test files
+debug-*.js
+test-*.js
+*-debug.js
+*-test.js
+
+# Temporary files
+*.tmp
+*.temp
+proposals.txt
+
+# Supabase table dumps
+*table*supabase*.txt
+*supabase*table*.txt
+
+# Favicon duplicates ở root (keep only in public/)
+/favicon.ico

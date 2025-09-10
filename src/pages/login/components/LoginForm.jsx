@@ -192,7 +192,8 @@ const LoginForm = ({ onLanguageChange, currentLanguage }) => {
             {currentLanguage === 'vi' ? 'Tiếp tục với GitHub' : 'Continue with GitHub'}
           </Button>
 
-          <Button
+          {/* Temporarily hidden Facebook login button */}
+          {/* <Button
             variant="outline"
             fullWidth
             onClick={() => handleSocialLogin('facebook')}
@@ -201,7 +202,7 @@ const LoginForm = ({ onLanguageChange, currentLanguage }) => {
             iconPosition="left"
           >
             {currentLanguage === 'vi' ? 'Tiếp tục với Facebook' : 'Continue with Facebook'}
-          </Button>
+          </Button> */}
         </div>
 
         {/* Register Link */}
