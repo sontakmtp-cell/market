@@ -10,11 +10,14 @@ import FileUploadSection from './components/FileUploadSection';
 import PreviewMode from './components/PreviewMode';
 import Button from '../../components/ui/Button';
 import Icon from '../../components/AppIcon';
+import Notification from '../../components/ui/Notification';
+import useNotification from '../../hooks/useNotification';
 import { saveRecruitmentJob } from '../../utils/dataStore';
 import { uploadFile } from '../../lib/supabaseClient';
 
 const EmployerJobPosting = () => {
   const navigate = useNavigate();
+  const { notification, showError, showSuccess, closeNotification } = useNotification();
   const [currentSection, setCurrentSection] = useState(0);
   const [formData, setFormData] = useState({
     // Job Basics
@@ -249,7 +252,7 @@ const EmployerJobPosting = () => {
       }
     }
     if (hasErrors) {
-      alert('Vui lòng kiểm tra và điền đầy đủ thông tin bắt buộc');
+      showError('Vui lòng kiểm tra và điền đầy đủ thông tin bắt buộc');
       return;
     }
 
@@ -286,21 +289,23 @@ const EmployerJobPosting = () => {
 
       if (error) {
         console.error('Error saving job:', error);
-        alert('Có lỗi xảy ra khi đăng tin: ' + (error.message || 'Unknown error'));
+        showError('Có lỗi xảy ra khi đăng tin: ' + (error.message || 'Unknown error'));
         return;
       }
 
       if (data) {
         localStorage.removeItem('job-posting-draft');
-        alert('Tin tuyển dụng đã được đăng thành công!');
+        showSuccess('Tin tuyển dụng đã được đăng thành công!');
         // Go to dashboard to manage applications
-        navigate('/recruitment-management-dashboard');
+        setTimeout(() => {
+          navigate('/recruitment-management-dashboard');
+        }, 2000); // Delay để người dùng thấy notification
       } else {
-        alert('Có lỗi xảy ra khi đăng tin. Vui lòng thử lại.');
+        showError('Có lỗi xảy ra khi đăng tin. Vui lòng thử lại.');
       }
     } catch (e) {
       console.error('Unexpected error saving job:', e);
-      alert('Có lỗi xảy ra khi đăng tin. Vui lòng thử lại.');
+      showError('Có lỗi xảy ra khi đăng tin. Vui lòng thử lại.');
     } finally {
       setLoading(false);
     }
@@ -316,7 +321,7 @@ const EmployerJobPosting = () => {
     }
 
     if (hasErrors) {
-      alert('Vui lòng kiểm tra và điền đầy đủ thông tin bắt buộc');
+      showError('Vui lòng kiểm tra và điền đầy đủ thông tin bắt buộc');
       return;
     }
 
@@ -328,11 +333,13 @@ const EmployerJobPosting = () => {
       // Clear draft after successful submission
       localStorage.removeItem('job-posting-draft');
       
-      alert('Tin tuyển dụng đã được đăng thành công!');
-      navigate('/job-marketplace');
+      showSuccess('Tin tuyển dụng đã được đăng thành công!');
+      setTimeout(() => {
+        navigate('/job-marketplace');
+      }, 2000); // Delay để người dùng thấy notification
     } catch (error) {
       console.error('Error creating job posting:', error);
-      alert('Có lỗi xảy ra khi đăng tin. Vui lòng thử lại.');
+      showError('Có lỗi xảy ra khi đăng tin. Vui lòng thử lại.');
     } finally {
       setLoading(false);
     }
@@ -407,6 +414,14 @@ const EmployerJobPosting = () => {
             loading={loading}
           />
         </div>
+        
+        {/* Notification Component */}
+        <Notification
+          message={notification.message}
+          type={notification.type}
+          isVisible={notification.isVisible}
+          onClose={closeNotification}
+        />
       </div>
     );
   }
@@ -547,6 +562,14 @@ const EmployerJobPosting = () => {
           </div>
         </div>
       </div>
+      
+      {/* Notification Component */}
+      <Notification
+        message={notification.message}
+        type={notification.type}
+        isVisible={notification.isVisible}
+        onClose={closeNotification}
+      />
     </div>
   );
 };
