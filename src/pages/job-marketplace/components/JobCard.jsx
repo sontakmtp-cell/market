@@ -1,16 +1,35 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 import { useAuth } from '../../../hooks/useAuth';
 import { useSupabase } from '../../../contexts/SupabaseContext';
+import { saveJob, unsaveJob, checkIfJobSaved } from '../../../services/jobService';
 
 const JobCard = ({ job, userRole = 'freelancer', onShowNotification }) => {
   const { isAuthenticated, redirectToLogin } = useAuth();
   const { user } = useSupabase();
+  const [isSaved, setIsSaved] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   
   // Check if current user is the job owner
   const isOwner = isAuthenticated && user && job?.client_user_id === user.id;
+
+  // Check if job is saved when component mounts or user changes
+  useEffect(() => {
+    const checkSavedStatus = async () => {
+      if (user?.id && job?.id) {
+        try {
+          const saved = await checkIfJobSaved(user.id, job.id);
+          setIsSaved(saved);
+        } catch (error) {
+          console.error('Error checking if job is saved:', error);
+        }
+      }
+    };
+
+    checkSavedStatus();
+  }, [user?.id, job?.id]);
   
   const getCategoryIcon = (category) => {
     const icons = {
@@ -50,14 +69,43 @@ const JobCard = ({ job, userRole = 'freelancer', onShowNotification }) => {
     return 'text-green-600';
   };
 
-  const handleSaveJob = () => {
+  const handleSaveJob = async () => {
     if (!isAuthenticated) {
       redirectToLogin();
       return;
     }
-    // TODO: Implement save job functionality
-    if (onShowNotification) {
-      onShowNotification('Đã lưu công việc!', 'success');
+
+    if (!user?.id || !job?.id) {
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      if (isSaved) {
+        await unsaveJob(user.id, job.id);
+        setIsSaved(false);
+        if (onShowNotification) {
+          onShowNotification('Đã bỏ lưu công việc!', 'success');
+        }
+      } else {
+        await saveJob(user.id, job.id);
+        setIsSaved(true);
+        if (onShowNotification) {
+          onShowNotification('Đã lưu công việc!', 'success');
+        }
+      }
+    } catch (error) {
+      console.error('Error saving/unsaving job:', error);
+      if (onShowNotification) {
+        onShowNotification(
+          error.message === 'Job is already saved' 
+            ? 'Công việc đã được lưu trước đó!' 
+            : 'Có lỗi xảy ra, vui lòng thử lại!', 
+          'error'
+        );
+      }
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -162,14 +210,18 @@ const JobCard = ({ job, userRole = 'freelancer', onShowNotification }) => {
           {userRole === 'freelancer' ? (
             <>
               <Button 
-                variant="outline" 
+                variant={isSaved ? "default" : "outline"}
                 size="sm"
                 onClick={handleSaveJob}
-                disabled={!isAuthenticated}
-                title={!isAuthenticated ? "Đăng nhập để lưu công việc" : "Lưu công việc"}
+                disabled={!isAuthenticated || isSaving}
+                title={!isAuthenticated ? "Đăng nhập để lưu công việc" : isSaved ? "Bỏ lưu công việc" : "Lưu công việc"}
               >
-                <Icon name="Heart" size={14} className="mr-1" />
-                {isAuthenticated ? "Lưu" : "Đăng nhập để lưu"}
+                <Icon 
+                  name={isSaved ? "Heart" : "Heart"} 
+                  size={14} 
+                  className={`mr-1 ${isSaved ? "fill-current" : ""}`} 
+                />
+                {isSaving ? "..." : (isSaved ? "Đã lưu" : "Lưu")}
               </Button>
               {isAuthenticated ? (
                 <Link to={`/job-details/${job?.id}`}>
