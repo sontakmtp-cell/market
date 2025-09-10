@@ -184,6 +184,17 @@ const LoginForm = ({ onLanguageChange, currentLanguage }) => {
           <Button
             variant="outline"
             fullWidth
+            onClick={() => handleSocialLogin('github')}
+            disabled={isLoading}
+            iconName="Github"
+            iconPosition="left"
+          >
+            {currentLanguage === 'vi' ? 'Tiếp tục với GitHub' : 'Continue with GitHub'}
+          </Button>
+
+          <Button
+            variant="outline"
+            fullWidth
             onClick={() => handleSocialLogin('facebook')}
             disabled={isLoading}
             iconName="Facebook"
