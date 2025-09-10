@@ -11,7 +11,8 @@ const JobGrid = ({
   viewMode = 'grid', 
   userRole = 'freelancer',
   onLoadMore,
-  hasMore = false
+  hasMore = false,
+  onShowNotification
 }) => {
   const { isAuthenticated, redirectToLogin } = useAuth();
   if (loading && jobs?.length === 0) {
@@ -123,6 +124,7 @@ const JobGrid = ({
             key={job?.id} 
             job={job} 
             userRole={userRole}
+            onShowNotification={onShowNotification}
           />
         ))}
       </div>

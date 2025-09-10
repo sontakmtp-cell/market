@@ -3,6 +3,8 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import Header from '../../components/ui/Header';
 import Icon from '../../components/AppIcon';
 import Button from '../../components/ui/Button';
+import Notification from '../../components/ui/Notification';
+import useNotification from '../../hooks/useNotification';
 import ProjectHeader from './components/ProjectHeader';
 import ProjectDetails from './components/ProjectDetails';
 import ClientInfo from './components/ClientInfo';
@@ -20,6 +22,7 @@ const JobDetails = () => {
   const navigate = useNavigate();
   const { isAuthenticated, redirectToLogin, user } = useAuth();
   const { supabase, user: supabaseUser } = useSupabase();
+  const { notification, showSuccess, showError, showWarning, closeNotification } = useNotification();
   const [project, setProject] = useState(null);
   const [proposals, setProposals] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -340,13 +343,13 @@ const JobDetails = () => {
 
     // Check if Supabase is available
     if (!supabase) {
-      alert('Dịch vụ đang bảo trì. Vui lòng thử lại sau!');
+      showError('Dịch vụ đang bảo trì. Vui lòng thử lại sau!');
       console.error('Supabase client not available');
       return;
     }
 
     if (!supabaseUser || !project?.id) {
-      alert('Có lỗi xảy ra. Vui lòng thử lại!');
+      showError('Có lỗi xảy ra. Vui lòng thử lại!');
       console.error('Missing user or project data:', { user: !!supabaseUser, projectId: project?.id });
       return;
     }
@@ -370,7 +373,7 @@ const JobDetails = () => {
 
       // Validate required fields
       if (!newProposal.project_id || !newProposal.freelancer_id || !newProposal.bid_amount) {
-        alert('Vui lòng điền đầy đủ thông tin bắt buộc!');
+        showError('Vui lòng điền đầy đủ thông tin bắt buộc!');
         return;
       }
 
@@ -397,7 +400,7 @@ const JobDetails = () => {
           userMessage = 'Bạn không có quyền thực hiện thao tác này.';
         }
         
-        alert(`${userMessage} Chi tiết: ${error.message}`);
+        showError(`${userMessage} Chi tiết: ${error.message}`);
         return;
       }
 
@@ -429,14 +432,14 @@ const JobDetails = () => {
         setProposals(prev => [mappedProposal, ...prev]);
 
         // Show success message
-        alert('Đề xuất đã được gửi thành công!');
+        showSuccess('Đề xuất đã được gửi thành công!');
         
         // Scroll to proposals section
         setActiveSection('proposals');
       }
     } catch (error) {
       console.error('Unexpected error submitting proposal:', error);
-      alert('Có lỗi không mong muốn xảy ra. Vui lòng thử lại!');
+      showError('Có lỗi không mong muốn xảy ra. Vui lòng thử lại!');
     }
   };
 
@@ -563,6 +566,12 @@ const JobDetails = () => {
                 <ExistingProposals 
                   proposals={proposals} 
                   onProposalDeleted={handleProposalDeleted}
+                  onShowNotification={(message, type) => {
+                    if (type === 'success') showSuccess(message);
+                    else if (type === 'error') showError(message);
+                    else if (type === 'warning') showWarning(message);
+                    else showInfo(message);
+                  }}
                 />
               )}
 
@@ -589,6 +598,14 @@ const JobDetails = () => {
           </div>
         </div>
       </div>
+      
+      {/* Notification Component */}
+      <Notification
+        message={notification.message}
+        type={notification.type}
+        isVisible={notification.isVisible}
+        onClose={closeNotification}
+      />
     </div>
   );
 };

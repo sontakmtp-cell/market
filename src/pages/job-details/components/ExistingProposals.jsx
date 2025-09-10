@@ -2,13 +2,16 @@ import React, { useState } from 'react';
 import Icon from '../../../components/AppIcon';
 import Image from '../../../components/AppImage';
 import Button from '../../../components/ui/Button';
+import ConfirmModal from '../../../components/ui/ConfirmModal';
 import { useAuth } from '../../../hooks/useAuth';
 import { useSupabase } from '../../../contexts/SupabaseContext';
 
-const ExistingProposals = ({ proposals = [], onProposalDeleted }) => {
+const ExistingProposals = ({ proposals = [], onProposalDeleted, onShowNotification }) => {
   const [sortBy, setSortBy] = useState('recent');
   const [showAll, setShowAll] = useState(false);
   const [deletingProposalId, setDeletingProposalId] = useState(null);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [proposalToDelete, setProposalToDelete] = useState(null);
   const { user } = useAuth();
   const { supabase } = useSupabase();
 
@@ -51,43 +54,61 @@ const ExistingProposals = ({ proposals = [], onProposalDeleted }) => {
 
   const handleDeleteProposal = async (proposalId) => {
     if (!supabase || !user) {
-      alert('Lỗi hệ thống. Vui lòng thử lại sau!');
+      if (onShowNotification) {
+        onShowNotification('Lỗi hệ thống. Vui lòng thử lại sau!', 'error');
+      }
       return;
     }
 
-    // Confirm deletion
-    if (!window.confirm('Bạn có chắc chắn muốn xóa đề xuất này? Hành động này không thể hoàn tác.')) {
-      return;
-    }
+    // Show confirmation modal instead of window.confirm
+    setProposalToDelete(proposalId);
+    setShowConfirmModal(true);
+  };
 
-    setDeletingProposalId(proposalId);
+  const handleConfirmDelete = async () => {
+    if (!proposalToDelete) return;
+
+    setDeletingProposalId(proposalToDelete);
+    setShowConfirmModal(false);
 
     try {
       // Delete proposal from Supabase
       const { error } = await supabase
         .from('proposals')
         .delete()
-        .eq('id', proposalId)
+        .eq('id', proposalToDelete)
         .eq('freelancer_id', user.id); // Extra security check
 
       if (error) {
         console.error('Error deleting proposal:', error);
-        alert('Có lỗi xảy ra khi xóa đề xuất. Vui lòng thử lại!');
+        if (onShowNotification) {
+          onShowNotification('Có lỗi xảy ra khi xóa đề xuất. Vui lòng thử lại!', 'error');
+        }
         return;
       }
 
       // Notify parent component to update the proposals list
       if (onProposalDeleted) {
-        onProposalDeleted(proposalId);
+        onProposalDeleted(proposalToDelete);
       }
 
-      alert('Đề xuất đã được xóa thành công!');
+      if (onShowNotification) {
+        onShowNotification('Đề xuất đã được xóa thành công!', 'success');
+      }
     } catch (error) {
       console.error('Unexpected error deleting proposal:', error);
-      alert('Có lỗi không mong muốn xảy ra. Vui lòng thử lại!');
+      if (onShowNotification) {
+        onShowNotification('Có lỗi không mong muốn xảy ra. Vui lòng thử lại!', 'error');
+      }
     } finally {
       setDeletingProposalId(null);
+      setProposalToDelete(null);
     }
+  };
+
+  const handleCancelDelete = () => {
+    setShowConfirmModal(false);
+    setProposalToDelete(null);
   };
 
   return (
@@ -272,6 +293,19 @@ const ExistingProposals = ({ proposals = [], onProposalDeleted }) => {
           )}
         </>
       )}
+
+      {/* Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showConfirmModal}
+        onClose={handleCancelDelete}
+        onConfirm={handleConfirmDelete}
+        title="Xác nhận xóa đề xuất"
+        message="Bạn có chắc chắn muốn xóa đề xuất này? Hành động này không thể hoàn tác và bạn sẽ mất tất cả thông tin đã nhập."
+        confirmText="Xóa đề xuất"
+        cancelText="Hủy bỏ"
+        type="danger"
+        isLoading={deletingProposalId === proposalToDelete}
+      />
     </div>
   );
 };

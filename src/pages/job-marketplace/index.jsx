@@ -4,6 +4,8 @@ import Header from '../../components/ui/Header';
 import FilterSidebar from './components/FilterSidebar';
 import SearchHeader from './components/SearchHeader';
 import JobGrid from './components/JobGrid';
+import Notification from '../../components/ui/Notification';
+import useNotification from '../../hooks/useNotification';
 import { getProjects } from '../../utils/dataStore';
 import { useAuth } from '../../hooks/useAuth';
 import LoginPrompt from '../../components/LoginPrompt';
@@ -11,6 +13,7 @@ import LoginPrompt from '../../components/LoginPrompt';
 const JobMarketplace = () => {
   const location = useLocation();
   const { isAuthenticated } = useAuth();
+  const { notification, showSuccess, showError, showInfo, closeNotification } = useNotification();
   const [userRole, setUserRole] = useState('freelancer');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -235,9 +238,18 @@ const JobMarketplace = () => {
             userRole={userRole}
             onLoadMore={handleLoadMore}
             hasMore={hasMore}
+            onShowNotification={showSuccess}
           />
         </div>
       </div>
+      
+      {/* Notification Component */}
+      <Notification
+        message={notification.message}
+        type={notification.type}
+        isVisible={notification.isVisible}
+        onClose={closeNotification}
+      />
     </div>
   );
 };

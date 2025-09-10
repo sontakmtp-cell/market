@@ -5,7 +5,7 @@ import Button from '../../../components/ui/Button';
 import { useAuth } from '../../../hooks/useAuth';
 import { useSupabase } from '../../../contexts/SupabaseContext';
 
-const JobCard = ({ job, userRole = 'freelancer' }) => {
+const JobCard = ({ job, userRole = 'freelancer', onShowNotification }) => {
   const { isAuthenticated, redirectToLogin } = useAuth();
   const { user } = useSupabase();
   
@@ -56,7 +56,9 @@ const JobCard = ({ job, userRole = 'freelancer' }) => {
       return;
     }
     // TODO: Implement save job functionality
-    alert('Đã lưu công việc!');
+    if (onShowNotification) {
+      onShowNotification('Đã lưu công việc!', 'success');
+    }
   };
 
   const handleApplyJob = () => {
