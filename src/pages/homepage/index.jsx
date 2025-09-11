@@ -10,7 +10,7 @@ import TestimonialsSection from './components/TestimonialsSection';
 const Homepage = () => {
   useEffect(() => {
     // Set page title and meta tags
-    document.title = 'TechMarketplace Pro - Nền tảng kỹ thuật hàng đầu Việt Nam';
+    document.title = 'Kỹ thuật vàng';
     
     // Scroll to top on page load
     window.scrollTo(0, 0);
@@ -23,7 +23,7 @@ const Homepage = () => {
   return (
     <>
       <Helmet>
-        <title>TechMarketplace Pro - Nền tảng kỹ thuật hàng đầu Việt Nam</title>
+        <title>Kỹ thuật vàng</title>
         <meta 
           name="description" 
           content="Kết nối chuyên gia kỹ thuật với dự án của bạn. Tìm kiếm freelancer, tuyển dụng nhân tài, mua sắm sản phẩm kỹ thuật và sử dụng công cụ tính toán chuyên ngành." 
@@ -31,19 +31,19 @@ const Homepage = () => {
         <meta name="keywords" content="freelancer kỹ thuật, tuyển dụng kỹ sư, sản phẩm kỹ thuật, công cụ tính toán, AutoCAD, Revit, thiết kế cơ khí" />
 
         {/* Open Graph */}
-        <meta property="og:title" content="TechMarketplace Pro - Nền tảng kỹ thuật hàng đầu Việt Nam" />
+        <meta property="og:title" content="Kỹ thuật vàng" />
         <meta property="og:description" content="Kết nối chuyên gia kỹ thuật với dự án của bạn. Hơn 50,000 chuyên gia và 12,847 dự án hoàn thành." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content={pageUrl} />
         <meta property="og:image" content={shareImage} />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
-        <meta property="og:site_name" content="TechMarketplace Pro" />
+        <meta property="og:site_name" content="Kỹ thuật vàng" />
         <meta property="og:locale" content="vi_VN" />
 
         {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="TechMarketplace Pro - Nền tảng kỹ thuật hàng đầu Việt Nam" />
+        <meta name="twitter:title" content="Kỹ thuật vàng" />
         <meta name="twitter:description" content="Kết nối chuyên gia kỹ thuật với dự án của bạn. Hơn 50,000 chuyên gia và 12,847 dự án hoàn thành." />
         <meta name="twitter:image" content={shareImage} />
 
@@ -78,7 +78,7 @@ const Homepage = () => {
               </h2>
               <p className="text-xl text-white/90 max-w-2xl mx-auto">
                 Tham gia cộng đồng hơn 50,000 chuyên gia kỹ thuật và 2,000 doanh nghiệp 
-                đang tin tưởng TechMarketplace Pro
+                đang tin tưởng Kỹ thuật vàng
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                 <a 
@@ -108,6 +108,11 @@ const Homepage = () => {
                     <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" />
                   </svg>
                   <span className="text-sm">Bảo mật 100%</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 0 0 6.105 6.105l.774-1.548a1 1 0 0 1 1.059-.54l4.435.74a1 1 0 0 1 .836.986V17a1 1 0 0 1-1 1h-2C7.82 18 2 12.18 2 5V3z" />
+                  </svg>
                 </div>
                 <div className="flex items-center space-x-2">
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">

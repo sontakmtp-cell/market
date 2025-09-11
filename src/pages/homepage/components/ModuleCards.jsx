@@ -80,6 +80,9 @@ const ModuleCards = () => {
     }
   ];
 
+  // Temporarily hide unfinished modules
+  const visibleModules = modules.filter(m => m.id !== 'product-store' && m.id !== 'calculation-tools');
+
   const container = {
     hidden: { opacity: 0 },
     visible: {
@@ -102,14 +105,14 @@ const ModuleCards = () => {
             Giải pháp kỹ thuật toàn diện
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Khám phá bốn module chính của nền tảng, được thiết kế đặc biệt 
+            Khám phá các module chính của nền tảng, được thiết kế đặc biệt 
             để đáp ứng mọi nhu cầu kỹ thuật của doanh nghiệp và chuyên gia Việt Nam.
           </p>
         </motion.div>
 
         {/* Module Cards Grid */}
         <motion.div className="grid md:grid-cols-2 gap-8" variants={container} initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.2 }}>
-          {modules?.map((module) => (
+          {visibleModules?.map((module) => (
             <motion.div
               key={module.id}
               className={`group relative bg-card border ${module.borderColor} rounded-2xl p-8 transition-all duration-300 hover:shadow-elevation-3 ${module.hoverColor} hover:scale-[1.02]`}
