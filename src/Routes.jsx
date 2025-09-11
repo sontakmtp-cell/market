@@ -20,6 +20,7 @@ import ProfileManageGuard from './guards/ProfileManageGuard';
 import AuthGuard from './guards/AuthGuard';
 import SimpleProfileManage from './pages/profile-manage/simple';
 import AuthTest from './components/AuthTest';
+import MessagesNew from './pages/messages';
 
 // Test component to check Supabase
 const TestComponent = () => {
@@ -95,6 +96,17 @@ const Routes = () => {
           </ProfileManageGuard>
         } />
         <Route path="/profile/:username" element={<PublicProfile />} />
+        {/* Messages routes */}
+        <Route path="/messages" element={
+          <AuthGuard>
+            <MessagesNew />
+          </AuthGuard>
+        } />
+        <Route path="/messages/:conversationId" element={
+          <AuthGuard>
+            <MessagesNew />
+          </AuthGuard>
+        } />
         <Route path="/auth-test" element={<AuthTest />} />
         <Route path="*" element={<NotFound />} />
       </RouterRoutes>

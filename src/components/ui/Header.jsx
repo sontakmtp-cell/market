@@ -113,6 +113,16 @@ const Header = () => {
           <div className="hidden lg:flex items-center space-x-4">
             {isAuthenticated ? (
               <div className="flex items-center space-x-3">
+                {/* Messages Link */}
+                <Link
+                  to="/messages"
+                  className={`p-2 rounded-md transition-smooth hover:bg-muted ${
+                    isActivePath('/messages') ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                  title="Tin nhắn"
+                >
+                  <Icon name="MessageSquare" size={20} />
+                </Link>
                 <RoleDropdown
                   currentRole={currentRole}
                   roles={ROLE_CONFIG}
@@ -248,6 +258,19 @@ const Header = () => {
             <div className="border-t border-border pt-6">
               {isAuthenticated ? (
                 <div className="space-y-3">
+                  {/* Messages Link for Mobile */}
+                  <Link
+                    to="/messages"
+                    onClick={() => setIsMenuOpen(false)}
+                    className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-smooth ${
+                      isActivePath('/messages')
+                        ? 'bg-primary text-primary-foreground'
+                        : 'text-foreground hover:bg-muted'
+                    }`}
+                  >
+                    <Icon name="MessageSquare" size={20} />
+                    <span>Tin nhắn</span>
+                  </Link>
 
                   <div className="px-4 py-2 text-sm text-muted-foreground">
                     <div className="font-medium text-foreground">Professional Account</div>
