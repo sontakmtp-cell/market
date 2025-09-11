@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 import { useAuth } from '../../../hooks/useAuth';
@@ -8,7 +8,8 @@ import { saveJob, unsaveJob, checkIfJobSaved } from '../../../services/jobServic
 
 const JobCard = ({ job, userRole = 'freelancer', onShowNotification }) => {
   const { isAuthenticated, redirectToLogin } = useAuth();
-  const { user } = useSupabase();
+  const { user, supabase } = useSupabase();
+  const navigate = useNavigate();
   const [isSaved, setIsSaved] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   
@@ -115,6 +116,43 @@ const JobCard = ({ job, userRole = 'freelancer', onShowNotification }) => {
       return;
     }
     // Navigate to job details or application form
+  };
+
+  const handleEditJob = async (e) => {
+    if (e) {
+      try { e.preventDefault(); e.stopPropagation(); } catch (_) {}
+    }
+    if (!job?.id) return;
+
+    try {
+      // Block editing when project is not active or has an accepted proposal
+      if (job?.status && job.status !== 'active') {
+        if (onShowNotification) {
+          onShowNotification('Bài đăng đã có đề xuất được chấp nhận hoặc đang thực hiện. Không thể chỉnh sửa.', 'warning');
+        }
+        return;
+      }
+
+      if (supabase) {
+        const { count: acceptedCount } = await supabase
+          .from('proposals')
+          .select('id', { count: 'exact', head: true })
+          .eq('project_id', job.id)
+          .eq('status', 'accepted');
+
+        if ((acceptedCount || 0) > 0) {
+          if (onShowNotification) {
+            onShowNotification('Bài đăng đã có đề xuất được chấp nhận. Không thể chỉnh sửa.', 'warning');
+          }
+          return;
+        }
+      }
+
+      navigate(`/job-post/edit/${job?.id}`);
+    } catch (err) {
+      console.warn('Edit guard check failed (marketplace):', err);
+      navigate(`/job-post/edit/${job?.id}`);
+    }
   };
 
   return (
@@ -249,7 +287,7 @@ const JobCard = ({ job, userRole = 'freelancer', onShowNotification }) => {
               </Link>
               {isOwner && (
                 <Link to={`/job-post/edit/${job?.id}`}>
-                  <Button variant="default" size="sm">
+                  <Button variant="default" size="sm" onClick={handleEditJob}>
                     <Icon name="Edit" size={14} className="mr-1" />
                     Chỉnh sửa
                   </Button>
