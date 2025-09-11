@@ -42,14 +42,7 @@ const ProjectHeader = ({ project, onShowNotification, onProjectDeleted }) => {
     }
 
     try {
-      // Block editing when project is not active or has an accepted proposal
-      if (project?.status && project.status !== 'active') {
-        if (onShowNotification) {
-          onShowNotification('Bài đăng đã có đề xuất được chấp nhận hoặc đang thực hiện. Không thể chỉnh sửa.', 'warning');
-        }
-        return;
-      }
-
+      // Only block editing when there is an accepted proposal
       const { count: acceptedCount } = await supabase
         .from('proposals')
         .select('id', { count: 'exact', head: true })
@@ -80,14 +73,8 @@ const ProjectHeader = ({ project, onShowNotification, onProjectDeleted }) => {
 
     setIsDeleting(true);
     try {
-      // Guard: prevent deletion if project has an accepted proposal or is not active
+      // Guard: prevent deletion only if project has an accepted proposal
       try {
-        if (project?.status && project.status !== 'active') {
-          if (onShowNotification) {
-            onShowNotification('Bài đăng đã có đề xuất được chấp nhận hoặc đang thực hiện. Không thể xóa.', 'warning');
-          }
-          return;
-        }
         const { count: acceptedCount } = await supabase
           .from('proposals')
           .select('id', { count: 'exact', head: true })
