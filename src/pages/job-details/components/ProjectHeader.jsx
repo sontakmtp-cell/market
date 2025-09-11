@@ -35,8 +35,39 @@ const ProjectHeader = ({ project, onShowNotification, onProjectDeleted }) => {
     checkSavedStatus();
   }, [user?.id, project?.id]);
   
-  const handleEditProject = () => {
-    navigate(`/job-post/edit/${project?.id}`);
+  const handleEditProject = async () => {
+    if (!project?.id || !supabase) {
+      navigate(`/job-post/edit/${project?.id}`);
+      return;
+    }
+
+    try {
+      // Block editing when project is not active or has an accepted proposal
+      if (project?.status && project.status !== 'active') {
+        if (onShowNotification) {
+          onShowNotification('Bài đăng đã có đề xuất được chấp nhận hoặc đang thực hiện. Không thể chỉnh sửa.', 'warning');
+        }
+        return;
+      }
+
+      const { count: acceptedCount } = await supabase
+        .from('proposals')
+        .select('id', { count: 'exact', head: true })
+        .eq('project_id', project.id)
+        .eq('status', 'accepted');
+
+      if ((acceptedCount || 0) > 0) {
+        if (onShowNotification) {
+          onShowNotification('Bài đăng đã có đề xuất được chấp nhận. Không thể chỉnh sửa.', 'warning');
+        }
+        return;
+      }
+
+      navigate(`/job-post/edit/${project?.id}`);
+    } catch (err) {
+      console.warn('Edit guard check failed:', err);
+      navigate(`/job-post/edit/${project?.id}`);
+    }
   };
 
   const handleDeleteProject = async () => {
@@ -49,9 +80,32 @@ const ProjectHeader = ({ project, onShowNotification, onProjectDeleted }) => {
 
     setIsDeleting(true);
     try {
-      // Delete project from Supabase
+      // Guard: prevent deletion if project has an accepted proposal or is not active
+      try {
+        if (project?.status && project.status !== 'active') {
+          if (onShowNotification) {
+            onShowNotification('Bài đăng đã có đề xuất được chấp nhận hoặc đang thực hiện. Không thể xóa.', 'warning');
+          }
+          return;
+        }
+        const { count: acceptedCount } = await supabase
+          .from('proposals')
+          .select('id', { count: 'exact', head: true })
+          .eq('project_id', project.id)
+          .eq('status', 'accepted');
+        if ((acceptedCount || 0) > 0) {
+          if (onShowNotification) {
+            onShowNotification('Bài đăng đã có đề xuất được chấp nhận. Vui lòng hủy hợp đồng trước khi xóa.', 'warning');
+          }
+          return;
+        }
+      } catch (_) {
+        // Ignore guard errors; RLS will still protect on server
+      }
+
+      // Delete project from Supabase (correct table)
       const { error } = await supabase
-        .from('projects')
+        .from('marketplace_projects')
         .delete()
         .eq('id', project.id)
         .eq('client_user_id', user.id); // Extra security check
