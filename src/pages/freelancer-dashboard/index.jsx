@@ -9,10 +9,12 @@ import EarningsChart from './components/EarningsChart';
 import QuickActions from './components/QuickActions';
 import RecentFeedback from './components/RecentFeedback';
 import UpcomingDeadlines from './components/UpcomingDeadlines';
+import ActiveContracts from './components/ActiveContracts';
 import Icon from '../../components/AppIcon';
 import Button from '../../components/ui/Button';
 import FreelancerManagement from './components/FreelancerManagement';
 import PaymentManagement from './components/PaymentManagement';
+import ContractDebugger from '../../components/ContractDebugger';
 import { ROLES } from '../../utils/constants';
 
 const FreelancerDashboard = () => {
@@ -27,23 +29,44 @@ const FreelancerDashboard = () => {
     }, 60000); // Update every minute
 
     const role = localStorage.getItem('userRole') || 'freelancer';
+    console.log('Initial role from localStorage:', role);
     setUserRole(role);
 
-    return () => clearInterval(timer);
+    // Listen for localStorage changes
+    const handleStorageChange = (e) => {
+      if (e.key === 'userRole') {
+        console.log('Role changed in localStorage:', e.newValue);
+        setUserRole(e.newValue || 'freelancer');
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      clearInterval(timer);
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, []);
 
+  // Listen for role changes from other components
+  useEffect(() => {
+    const checkRoleChange = () => {
+      const currentRole = localStorage.getItem('userRole') || 'freelancer';
+      if (currentRole !== userRole) {
+        console.log('Role mismatch detected, updating:', { current: userRole, localStorage: currentRole });
+        setUserRole(currentRole);
+      }
+    };
+
+    const interval = setInterval(checkRoleChange, 1000); // Check every second
+    return () => clearInterval(interval);
+  }, [userRole]);
+
   const handleRoleChange = (newRole) => {
+    console.log('Changing role from', userRole, 'to', newRole);
     localStorage.setItem('userRole', newRole);
     setUserRole(newRole);
   };
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 60000); // Update every minute
-
-    return () => clearInterval(timer);
-  }, []);
 
   const freelancerProjects = [
     {
@@ -235,6 +258,10 @@ const FreelancerDashboard = () => {
                   <h1 className="text-3xl font-bold text-foreground">
                     {userRole === 'freelancer' ? 'Bảng điều khiển Freelancer' : 'Bảng điều khiển Client'}
                   </h1>
+                  {/* Debug info - Remove in production */}
+                  <div className="text-xs bg-yellow-100 px-2 py-1 rounded">
+                    Role: {userRole} | LocalStorage: {localStorage.getItem('userRole')}
+                  </div>
                   {/* Role switch removed; role managed globally via header */}
                 </div>
                 <div className="flex items-center space-x-4 text-muted-foreground">
@@ -295,23 +322,8 @@ const FreelancerDashboard = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
             {/* Left Column - Projects and Charts */}
             <div className="lg:col-span-2 space-y-6">
-              {/* Active Projects */}
-              <div className="bg-card border border-border rounded-lg shadow-elevation-1">
-                <div className="flex items-center justify-between p-6 border-b border-border">
-                  <div className="flex items-center space-x-2">
-                    <Icon name="Briefcase" size={20} className="text-primary" />
-                    <h2 className="text-xl font-semibold text-foreground">Dự án đang thực hiện</h2>
-                  </div>
-                  <Button variant="ghost" size="sm" iconName="MoreHorizontal">
-                    Xem tất cả
-                  </Button>
-                </div>
-                <div className="p-6 space-y-6">
-                  {(userRole === 'freelancer' ? freelancerProjects : clientProjects)?.map((project) => (
-                    <ProjectCard key={project?.id} project={project} userRole={userRole} />
-                  ))}
-                </div>
-              </div>
+              {/* Active Contracts */}
+              <ActiveContracts userRole={userRole} />
 
               {/* Earnings Chart */}
               <EarningsChart />
@@ -341,6 +353,9 @@ const FreelancerDashboard = () => {
 
           {/* Bottom Section */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Contract Debugger */}
+            <ContractDebugger />
+            
             {userRole === 'freelancer' && <UpcomingDeadlines />}
             
             {/* File Management */}

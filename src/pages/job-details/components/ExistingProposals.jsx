@@ -5,6 +5,7 @@ import Button from '../../../components/ui/Button';
 import ConfirmModal from '../../../components/ui/ConfirmModal';
 import { useAuth } from '../../../hooks/useAuth';
 import { useSupabase } from '../../../contexts/SupabaseContext';
+import { contractService } from '../../../services/contractService';
 
 const ExistingProposals = ({ proposals = [], onProposalDeleted, onShowNotification, isOwner = false, project = null }) => {
   const [sortBy, setSortBy] = useState('recent');
@@ -75,29 +76,42 @@ const ExistingProposals = ({ proposals = [], onProposalDeleted, onShowNotificati
     setShowAcceptModal(false);
 
     try {
-      // Update proposal status to accepted
-      const { error } = await supabase
-        .from('proposals')
-        .update({ status: 'accepted' })
-        .eq('id', proposalToAccept);
+      // Use the contractService to handle the complete flow
+      const result = await contractService.acceptProposalAndCreateContract(
+        project?.id, 
+        proposalToAccept, 
+        user.id
+      );
 
-      if (error) {
-        console.error('Error accepting proposal:', error);
+      if (result.error) {
+        console.error('Error accepting proposal:', result.error);
         if (onShowNotification) {
-          onShowNotification('Có lỗi xảy ra khi chấp nhận đề xuất. Vui lòng thử lại!', 'error');
+          onShowNotification(result.error || 'Có lỗi xảy ra khi chấp nhận đề xuất. Vui lòng thử lại!', 'error');
         }
         return;
       }
 
-      // TODO: Add logic to:
-      // 1. Update project status to 'in_progress' or 'assigned'
-      // 2. Reject other proposals for this project
-      // 3. Create contract/agreement record
-      // 4. Send notification to freelancer
-
       if (onShowNotification) {
-        onShowNotification('Đề xuất đã được chấp nhận thành công!', 'success');
+        onShowNotification('Đề xuất đã được chấp nhận thành công! Hợp đồng đã được tạo và dự án chuyển sang trạng thái đang thực hiện.', 'success');
       }
+
+      // Force clear any cached data and refresh
+      localStorage.removeItem('activeContracts'); // Clear any cached data
+      
+      // Trigger custom event for other components to refresh
+      window.dispatchEvent(new CustomEvent('contractsUpdated', { 
+        detail: { 
+          type: 'proposal_accepted',
+          projectId: project?.id,
+          contractId: result.data?.contract?.id
+        }
+      }));
+
+      // Refresh the page or update state to reflect changes
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+
     } catch (error) {
       console.error('Unexpected error accepting proposal:', error);
       if (onShowNotification) {
