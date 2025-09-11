@@ -62,7 +62,6 @@
   "scripts": {
     "start": "vite",
     "build": "vite build --sourcemap",
-    "postbuild": "node scripts/copy-404.js",
     "serve": "vite preview",
     "test": "vitest",
     "test:ui": "vitest --ui",
