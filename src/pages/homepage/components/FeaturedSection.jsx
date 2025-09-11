@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import Icon from '../../../components/AppIcon';
 import Image from '../../../components/AppImage';
 import Button from '../../../components/ui/Button';
+import { motion } from 'framer-motion';
 
 const FeaturedSection = () => {
   const featuredFreelancers = [
@@ -116,6 +117,9 @@ const FeaturedSection = () => {
     }
   ];
 
+  const container = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.08, delayChildren: 0.1 } } };
+  const item = { hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease: [0.22, 1, 0.36, 1] } } };
+
   return (
     <section className="py-16 lg:py-24 bg-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -137,9 +141,9 @@ const FeaturedSection = () => {
             </Link>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6">
+          <motion.div className="grid md:grid-cols-3 gap-6" variants={container} initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.2 }}>
             {featuredFreelancers?.map((freelancer) => (
-              <div key={freelancer?.id} className="bg-card border border-border rounded-2xl p-6 hover:shadow-elevation-2 transition-shadow">
+              <motion.div key={freelancer?.id} className="bg-card border border-border rounded-2xl p-6 hover:shadow-elevation-2 transition-shadow" variants={item} whileHover={{ y: -4 }}>
                 <div className="flex items-start space-x-4 mb-4">
                   <div className="relative">
                     <Image
@@ -191,9 +195,9 @@ const FeaturedSection = () => {
                     </Button>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
 
         {/* Recent Jobs */}
@@ -214,9 +218,9 @@ const FeaturedSection = () => {
             </Link>
           </div>
 
-          <div className="space-y-4">
+          <motion.div className="space-y-4" variants={container} initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.2 }}>
             {recentJobs?.map((job) => (
-              <div key={job?.id} className="bg-card border border-border rounded-xl p-6 hover:shadow-elevation-1 transition-shadow">
+              <motion.div key={job?.id} className="bg-card border border-border rounded-xl p-6 hover:shadow-elevation-1 transition-shadow" variants={item}>
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
                     <div className="flex items-center space-x-3 mb-2">
@@ -261,9 +265,9 @@ const FeaturedSection = () => {
                     </Button>
                   </Link>
                 </div>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
 
         {/* Popular Products */}
@@ -284,9 +288,9 @@ const FeaturedSection = () => {
             </Link>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6">
+          <motion.div className="grid md:grid-cols-3 gap-6" variants={container} initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.2 }}>
             {popularProducts?.map((product) => (
-              <div key={product?.id} className="bg-card border border-border rounded-2xl overflow-hidden hover:shadow-elevation-2 transition-shadow">
+              <motion.div key={product?.id} className="bg-card border border-border rounded-2xl overflow-hidden hover:shadow-elevation-2 transition-shadow" variants={item} whileHover={{ y: -4 }}>
                 <div className="relative">
                   <Image
                     src={product?.image}
@@ -330,9 +334,9 @@ const FeaturedSection = () => {
                     </Button>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </div>
     </section>
