@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
+import { motion } from 'framer-motion';
 
 const ModuleCards = () => {
   const modules = [
@@ -79,11 +80,24 @@ const ModuleCards = () => {
     }
   ];
 
+  const container = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.1, delayChildren: 0.1 }
+    }
+  };
+
+  const item = {
+    hidden: { opacity: 0, y: 20, scale: 0.98 },
+    visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] } }
+  };
+
   return (
     <section className="py-16 lg:py-24 bg-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
-        <div className="text-center mb-16">
+        <motion.div className="text-center mb-16" initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.6 }}>
           <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-4">
             Giải pháp kỹ thuật toàn diện
           </h2>
@@ -91,14 +105,16 @@ const ModuleCards = () => {
             Khám phá bốn module chính của nền tảng, được thiết kế đặc biệt 
             để đáp ứng mọi nhu cầu kỹ thuật của doanh nghiệp và chuyên gia Việt Nam.
           </p>
-        </div>
+        </motion.div>
 
         {/* Module Cards Grid */}
-        <div className="grid md:grid-cols-2 gap-8">
+        <motion.div className="grid md:grid-cols-2 gap-8" variants={container} initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.2 }}>
           {modules?.map((module) => (
-            <div
+            <motion.div
               key={module.id}
               className={`group relative bg-card border ${module.borderColor} rounded-2xl p-8 transition-all duration-300 hover:shadow-elevation-3 ${module.hoverColor} hover:scale-[1.02]`}
+              variants={item}
+              whileHover={{ y: -4 }}
             >
               {/* Module Icon */}
               <div className={`inline-flex items-center justify-center w-16 h-16 ${module.bgColor} rounded-2xl mb-6 group-hover:scale-110 transition-transform duration-300`}>
@@ -148,12 +164,12 @@ const ModuleCards = () => {
               <div className="absolute top-4 right-4 opacity-10 group-hover:opacity-20 transition-opacity">
                 <Icon name={module.icon} size={64} className={module.iconColor} />
               </div>
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
 
         {/* Bottom CTA */}
-        <div className="text-center mt-16">
+        <motion.div className="text-center mt-16" initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}>
           <div className="inline-flex items-center space-x-4 bg-muted rounded-2xl p-6">
             <div className="flex items-center space-x-2">
               <Icon name="Sparkles" size={24} className="text-primary" />
@@ -167,7 +183,7 @@ const ModuleCards = () => {
               </Button>
             </Link>
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   );

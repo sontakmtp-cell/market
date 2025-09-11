@@ -1,6 +1,7 @@
 import React from 'react';
 import Icon from '../../../components/AppIcon';
 import Image from '../../../components/AppImage';
+import { motion } from 'framer-motion';
 
 const TestimonialsSection = () => {
   const testimonials = [
@@ -43,31 +44,16 @@ const TestimonialsSection = () => {
   ];
 
   const companyLogos = [
-    {
-      name: 'Vingroup',
-      logo: 'https://images.unsplash.com/photo-1599305445671-ac291c95aaa9?w=120&h=60&fit=crop'
-    },
-    {
-      name: 'FPT Corporation',
-      logo: 'https://images.unsplash.com/photo-1599305445671-ac291c95aaa9?w=120&h=60&fit=crop'
-    },
-    {
-      name: 'Viettel Group',
-      logo: 'https://images.unsplash.com/photo-1599305445671-ac291c95aaa9?w=120&h=60&fit=crop'
-    },
-    {
-      name: 'Hòa Phát Group',
-      logo: 'https://images.unsplash.com/photo-1599305445671-ac291c95aaa9?w=120&h=60&fit=crop'
-    },
-    {
-      name: 'Coteccons',
-      logo: 'https://images.unsplash.com/photo-1599305445671-ac291c95aaa9?w=120&h=60&fit=crop'
-    },
-    {
-      name: 'Techcombank',
-      logo: 'https://images.unsplash.com/photo-1599305445671-ac291c95aaa9?w=120&h=60&fit=crop'
-    }
+    { name: 'Vingroup', logo: 'https://images.unsplash.com/photo-1599305445671-ac291c95aaa9?w=120&h=60&fit=crop' },
+    { name: 'FPT Corporation', logo: 'https://images.unsplash.com/photo-1599305445671-ac291c95aaa9?w=120&h=60&fit=crop' },
+    { name: 'Viettel Group', logo: 'https://images.unsplash.com/photo-1599305445671-ac291c95aaa9?w=120&h=60&fit=crop' },
+    { name: 'Hòa Phát Group', logo: 'https://images.unsplash.com/photo-1599305445671-ac291c95aaa9?w=120&h=60&fit=crop' },
+    { name: 'Coteccons', logo: 'https://images.unsplash.com/photo-1599305445671-ac291c95aaa9?w=120&h=60&fit=crop' },
+    { name: 'Techcombank', logo: 'https://images.unsplash.com/photo-1599305445671-ac291c95aaa9?w=120&h=60&fit=crop' }
   ];
+
+  const container = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.08, delayChildren: 0.1 } } };
+  const item = { hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease: [0.22, 1, 0.36, 1] } } };
 
   return (
     <section className="py-16 lg:py-24 bg-muted/30">
@@ -84,9 +70,9 @@ const TestimonialsSection = () => {
         </div>
 
         {/* Testimonials Grid */}
-        <div className="grid lg:grid-cols-3 gap-8 mb-16">
+        <motion.div className="grid lg:grid-cols-3 gap-8 mb-16" variants={container} initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.2 }}>
           {testimonials?.map((testimonial) => (
-            <div key={testimonial?.id} className="bg-card border border-border rounded-2xl p-8 hover:shadow-elevation-2 transition-shadow">
+            <motion.div key={testimonial?.id} className="bg-card border border-border rounded-2xl p-8 hover:shadow-elevation-2 transition-shadow" variants={item}>
               {/* Rating */}
               <div className="flex items-center space-x-1 mb-6">
                 {[...Array(testimonial?.rating)]?.map((_, index) => (
@@ -128,9 +114,9 @@ const TestimonialsSection = () => {
                   </div>
                 </div>
               </div>
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
 
         {/* Company Logos */}
         <div className="text-center">
@@ -138,23 +124,23 @@ const TestimonialsSection = () => {
             Được tin tưởng bởi các doanh nghiệp hàng đầu Việt Nam
           </h3>
           
-          <div className="flex flex-wrap items-center justify-center gap-8 opacity-60 hover:opacity-80 transition-opacity">
+          <motion.div className="flex flex-wrap items-center justify-center gap-8 opacity-60 hover:opacity-80 transition-opacity" variants={container} initial="hidden" whileInView="visible" viewport={{ once: true }}>
             {companyLogos?.map((company, index) => (
-              <div key={index} className="flex items-center justify-center w-24 h-12 bg-card border border-border rounded-lg p-2 hover:shadow-elevation-1 transition-shadow">
+              <motion.div key={index} className="flex items-center justify-center w-24 h-12 bg-card border border-border rounded-lg p-2 hover:shadow-elevation-1 transition-shadow" variants={item}>
                 <Image
                   src={company?.logo}
                   alt={`${company?.name} logo`}
                   className="max-w-full max-h-full object-contain filter grayscale hover:grayscale-0 transition-all"
                 />
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
 
         {/* Trust Metrics */}
-        <div className="mt-16 bg-card border border-border rounded-2xl p-8">
-          <div className="grid md:grid-cols-3 gap-8 text-center">
-            <div className="space-y-2">
+        <motion.div className="mt-16 bg-card border border-border rounded-2xl p-8" initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.45 }}>
+          <motion.div className="grid md:grid-cols-3 gap-8 text-center" variants={container} initial="hidden" whileInView="visible" viewport={{ once: true }}>
+            <motion.div className="space-y-2" variants={item}>
               <div className="w-16 h-16 bg-success/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
                 <Icon name="Shield" size={32} className="text-success" />
               </div>
@@ -163,9 +149,9 @@ const TestimonialsSection = () => {
               <div className="text-xs text-muted-foreground">
                 Tuân thủ tiêu chuẩn ISO 27001
               </div>
-            </div>
+            </motion.div>
             
-            <div className="space-y-2">
+            <motion.div className="space-y-2" variants={item}>
               <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
                 <Icon name="Clock" size={32} className="text-primary" />
               </div>
@@ -174,9 +160,9 @@ const TestimonialsSection = () => {
               <div className="text-xs text-muted-foreground">
                 Hỗ trợ khách hàng 24/7
               </div>
-            </div>
+            </motion.div>
             
-            <div className="space-y-2">
+            <motion.div className="space-y-2" variants={item}>
               <div className="w-16 h-16 bg-warning/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
                 <Icon name="Award" size={32} className="text-warning" />
               </div>
@@ -185,9 +171,9 @@ const TestimonialsSection = () => {
               <div className="text-xs text-muted-foreground">
                 Từ hơn 10,000 đánh giá
               </div>
-            </div>
-          </div>
-        </div>
+            </motion.div>
+          </motion.div>
+        </motion.div>
       </div>
     </section>
   );

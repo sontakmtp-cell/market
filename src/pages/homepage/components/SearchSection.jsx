@@ -4,6 +4,7 @@ import Icon from '../../../components/AppIcon';
 import Input from '../../../components/ui/Input';
 import Button from '../../../components/ui/Button';
 import Select from '../../../components/ui/Select';
+import { motion } from 'framer-motion';
 
 const SearchSection = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -68,15 +69,11 @@ const SearchSection = () => {
     if (!searchQuery?.trim()) return;
 
     setIsSearching(true);
-    
-    // Simulate search delay
     setTimeout(() => {
       const searchParams = new URLSearchParams({
         q: searchQuery,
         category: searchCategory
       });
-      
-      // Navigate based on category
       switch (searchCategory) {
         case 'jobs':
           navigate(`/job-marketplace?${searchParams}`);
@@ -93,7 +90,6 @@ const SearchSection = () => {
         default:
           navigate(`/job-marketplace?${searchParams}`);
       }
-      
       setIsSearching(false);
     }, 1000);
   };
@@ -107,24 +103,37 @@ const SearchSection = () => {
     navigate(action?.path);
   };
 
+  const container = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.08, delayChildren: 0.1 }
+    }
+  };
+
+  const fadeUp = {
+    hidden: { opacity: 0, y: 16 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease: [0.22, 1, 0.36, 1] } }
+  };
+
   return (
     <section className="py-16 lg:py-20 bg-gradient-to-br from-primary/5 via-background to-accent/5">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Search Header */}
-        <div className="text-center mb-12">
-          <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-4">
+        <motion.div className="text-center mb-12" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={container}>
+          <motion.h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-4" variants={fadeUp}>
             Tìm kiếm nhanh chóng
-          </h2>
-          <p className="text-xl text-muted-foreground">
+          </motion.h2>
+          <motion.p className="text-xl text-muted-foreground" variants={fadeUp}>
             Khám phá hàng nghìn dự án, chuyên gia và sản phẩm kỹ thuật chất lượng cao
-          </p>
-        </div>
+          </motion.p>
+        </motion.div>
 
         {/* Main Search Form */}
-        <div className="bg-card border border-border rounded-2xl p-8 shadow-elevation-2 mb-12">
+        <motion.div className="bg-card border border-border rounded-2xl p-8 shadow-elevation-2 mb-12" initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}>
           <form onSubmit={handleSearch} className="space-y-6">
             <div className="grid md:grid-cols-4 gap-4">
-              <div className="md:col-span-2">
+              <motion.div className="md:col-span-2" initial={{ opacity: 0, x: -12 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.4 }}>
                 <Input
                   type="search"
                   placeholder="Tìm kiếm dự án, chuyên gia, sản phẩm..."
@@ -132,16 +141,16 @@ const SearchSection = () => {
                   onChange={(e) => setSearchQuery(e?.target?.value)}
                   className="h-12"
                 />
-              </div>
-              <div>
+              </motion.div>
+              <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: 0.05 }}>
                 <Select
                   options={searchCategories}
                   value={searchCategory}
                   onChange={setSearchCategory}
                   placeholder="Danh mục"
                 />
-              </div>
-              <div>
+              </motion.div>
+              <motion.div initial={{ opacity: 0, x: 12 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: 0.1 }}>
                 <Button
                   type="submit"
                   variant="default"
@@ -154,7 +163,7 @@ const SearchSection = () => {
                 >
                   Tìm kiếm
                 </Button>
-              </div>
+              </motion.div>
             </div>
           </form>
 
@@ -164,28 +173,32 @@ const SearchSection = () => {
               <Icon name="TrendingUp" size={16} className="text-muted-foreground" />
               <span className="text-sm font-medium text-muted-foreground">Tìm kiếm phổ biến:</span>
             </div>
-            <div className="flex flex-wrap gap-2">
+            <motion.div className="flex flex-wrap gap-2" variants={container} initial="hidden" whileInView="visible" viewport={{ once: true }}>
               {popularSearches?.map((search, index) => (
-                <button
+                <motion.button
                   key={index}
                   onClick={() => handlePopularSearch(search)}
                   className="inline-flex items-center space-x-2 bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground px-3 py-2 rounded-lg text-sm transition-colors"
+                  variants={fadeUp}
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.98 }}
                 >
                   <Icon name={search?.icon} size={14} />
                   <span>{search?.text}</span>
-                </button>
+                </motion.button>
               ))}
-            </div>
+            </motion.div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Quick Actions */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <motion.div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4" variants={container} initial="hidden" whileInView="visible" viewport={{ once: true }}>
           {quickActions?.map((action, index) => (
-            <button
+            <motion.button
               key={index}
               onClick={() => handleQuickAction(action)}
               className="bg-card border border-border rounded-xl p-6 text-left hover:shadow-elevation-2 hover:scale-105 transition-all duration-300 group"
+              variants={fadeUp}
             >
               <div className={`inline-flex items-center justify-center w-12 h-12 ${action?.bgColor} rounded-xl mb-4 group-hover:scale-110 transition-transform`}>
                 <Icon name={action?.icon} size={24} className={action?.color} />
@@ -200,12 +213,12 @@ const SearchSection = () => {
                 <span>Khám phá ngay</span>
                 <Icon name="ArrowRight" size={12} />
               </div>
-            </button>
+            </motion.button>
           ))}
-        </div>
+        </motion.div>
 
         {/* Search Tips */}
-        <div className="mt-12 bg-muted/50 rounded-xl p-6">
+        <motion.div className="mt-12 bg-muted/50 rounded-xl p-6" initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.45 }}>
           <div className="flex items-start space-x-3">
             <Icon name="Lightbulb" size={20} className="text-warning flex-shrink-0 mt-1" />
             <div>
@@ -218,7 +231,7 @@ const SearchSection = () => {
               </ul>
             </div>
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   );
