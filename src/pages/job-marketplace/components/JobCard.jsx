@@ -156,17 +156,17 @@ const JobCard = ({ job, userRole = 'freelancer', onShowNotification }) => {
   };
 
   return (
-    <div className="bg-card border border-border rounded-lg p-6 hover:shadow-elevation-2 transition-smooth">
+    <div className="bg-card border border-border rounded-lg p-4 hover:shadow-elevation-2 transition-smooth">
       {/* Header */}
-      <div className="flex items-start justify-between mb-4">
+      <div className="flex items-start justify-between mb-3">
         <div className="flex-1">
           <Link 
             to={`/job-details/${job?.id}`}
-            className="text-lg font-semibold text-foreground hover:text-primary transition-smooth line-clamp-2"
+            className="text-base font-semibold text-foreground hover:text-primary transition-smooth line-clamp-2"
           >
             {job?.title}
           </Link>
-          <div className="flex items-center space-x-2 mt-2">
+          <div className="flex items-center space-x-2 mt-1">
             <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(job?.category)}`}>
               <Icon name={getCategoryIcon(job?.category)} size={12} className="mr-1" />
               {job?.category}
@@ -187,11 +187,11 @@ const JobCard = ({ job, userRole = 'freelancer', onShowNotification }) => {
         )}
       </div>
       {/* Description */}
-      <p className="text-muted-foreground text-sm mb-4 line-clamp-3">
+      <p className="text-muted-foreground text-sm mb-3 line-clamp-2">
         {job?.description}
       </p>
       {/* Skills */}
-      <div className="flex flex-wrap gap-2 mb-4">
+      <div className="flex flex-wrap gap-2 mb-3">
         {job?.skills?.slice(0, 3)?.map((skill, index) => (
           <span key={index} className="px-2 py-1 bg-muted text-muted-foreground text-xs rounded">
             {skill}

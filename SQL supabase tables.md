@@ -48,10 +48,25 @@ CREATE TABLE public.contracts (
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
   CONSTRAINT contracts_pkey PRIMARY KEY (id),
+  CONSTRAINT contracts_freelancer_id_fkey FOREIGN KEY (freelancer_id) REFERENCES auth.users(id),
   CONSTRAINT contracts_project_id_fkey FOREIGN KEY (project_id) REFERENCES public.marketplace_projects(id),
   CONSTRAINT contracts_proposal_id_fkey FOREIGN KEY (proposal_id) REFERENCES public.proposals(id),
-  CONSTRAINT contracts_client_id_fkey FOREIGN KEY (client_id) REFERENCES auth.users(id),
-  CONSTRAINT contracts_freelancer_id_fkey FOREIGN KEY (freelancer_id) REFERENCES auth.users(id)
+  CONSTRAINT contracts_client_id_fkey FOREIGN KEY (client_id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.conversations (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  project_id bigint NOT NULL,
+  client_id uuid NOT NULL,
+  freelancer_id uuid NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  last_message_preview text,
+  unread_by_client boolean NOT NULL DEFAULT false,
+  unread_by_freelancer boolean NOT NULL DEFAULT false,
+  CONSTRAINT conversations_pkey PRIMARY KEY (id),
+  CONSTRAINT conversations_client_id_fkey FOREIGN KEY (client_id) REFERENCES auth.users(id),
+  CONSTRAINT conversations_project_id_fkey FOREIGN KEY (project_id) REFERENCES public.marketplace_projects(id),
+  CONSTRAINT conversations_freelancer_id_fkey FOREIGN KEY (freelancer_id) REFERENCES auth.users(id)
 );
 CREATE TABLE public.jobs (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -86,8 +101,28 @@ CREATE TABLE public.marketplace_projects (
   proposalCount integer DEFAULT 0,
   status text DEFAULT 'active'::text,
   freelancer_id uuid,
+  displayType text DEFAULT 'standard'::text CHECK ("displayType" = ANY (ARRAY['standard'::text, 'vip'::text])),
+  vipFeePaid numeric DEFAULT 0,
+  vipActivatedAt timestamp with time zone,
+  vipExpiresAt timestamp with time zone,
+  vipPaymentReference text,
+  vipPaymentStatus text DEFAULT 'pending'::text CHECK ("vipPaymentStatus" = ANY (ARRAY['pending'::text, 'paid'::text, 'failed'::text, 'refunded'::text])),
   CONSTRAINT marketplace_projects_pkey PRIMARY KEY (id),
   CONSTRAINT marketplace_projects_client_user_id_fkey FOREIGN KEY (client_user_id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.messages (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  conversation_id uuid NOT NULL,
+  sender_id uuid NOT NULL,
+  receiver_id uuid NOT NULL,
+  content text NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  is_read boolean NOT NULL DEFAULT false,
+  attachments jsonb,
+  CONSTRAINT messages_pkey PRIMARY KEY (id),
+  CONSTRAINT messages_receiver_id_fkey FOREIGN KEY (receiver_id) REFERENCES auth.users(id),
+  CONSTRAINT messages_conversation_id_fkey FOREIGN KEY (conversation_id) REFERENCES public.conversations(id),
+  CONSTRAINT messages_sender_id_fkey FOREIGN KEY (sender_id) REFERENCES auth.users(id)
 );
 CREATE TABLE public.profiles (
   id uuid NOT NULL,
@@ -119,8 +154,8 @@ CREATE TABLE public.projects (
   currency text DEFAULT 'VND'::text,
   deadline date,
   CONSTRAINT projects_pkey PRIMARY KEY (id),
-  CONSTRAINT projects_freelancer_id_fkey FOREIGN KEY (freelancer_id) REFERENCES auth.users(id),
-  CONSTRAINT projects_client_id_fkey FOREIGN KEY (client_id) REFERENCES auth.users(id)
+  CONSTRAINT projects_client_id_fkey FOREIGN KEY (client_id) REFERENCES auth.users(id),
+  CONSTRAINT projects_freelancer_id_fkey FOREIGN KEY (freelancer_id) REFERENCES auth.users(id)
 );
 CREATE TABLE public.proposals (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -175,6 +210,6 @@ CREATE TABLE public.saved_jobs (
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
   CONSTRAINT saved_jobs_pkey PRIMARY KEY (id),
-  CONSTRAINT saved_jobs_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id),
-  CONSTRAINT saved_jobs_job_id_fkey FOREIGN KEY (job_id) REFERENCES public.marketplace_projects(id)
+  CONSTRAINT saved_jobs_job_id_fkey FOREIGN KEY (job_id) REFERENCES public.marketplace_projects(id),
+  CONSTRAINT saved_jobs_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
 );

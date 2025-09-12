@@ -31,6 +31,7 @@ const JobPost = () => {
     objectives: [''],
     technicalRequirements: [{ category: '', items: [''] }],
     deliverables: [{ title: '', description: '', deadline: '' }],
+    displayType: 'standard', // 'standard' or 'vip'
     client: {
       name: 'Khách hàng',
       company: '',
@@ -70,6 +71,7 @@ const JobPost = () => {
               objectives: Array.isArray(projectData.objectives) ? projectData.objectives : [''],
               technicalRequirements: Array.isArray(projectData.technicalRequirements) ? projectData.technicalRequirements : [{ category: '', items: [''] }],
               deliverables: Array.isArray(projectData.deliverables) ? projectData.deliverables : [{ title: '', description: '', deadline: '' }],
+              displayType: projectData.displayType || 'standard',
               client: projectData.client || {
                 name: 'Khách hàng',
                 company: '',
@@ -295,6 +297,17 @@ const JobPost = () => {
       return;
     }
 
+    // Handle VIP payment confirmation
+    if (formData.displayType === 'vip' && !isEditMode) {
+      const confirmPayment = window.confirm(
+        `Bạn đã chọn đăng bài với giao diện VIP.\n\nPhí VIP: 10.000 VND\n\nLợi ích:\n- Hiệu ứng 3D tuyệt đẹp\n- Badge VIP nổi bật\n- Tăng tỷ lệ xem và ứng tuyển\n\nBạn có đồng ý thanh toán không?`
+      );
+      
+      if (!confirmPayment) {
+        return;
+      }
+    }
+
     try {
       // Clean up data before saving
       const cleanData = {
@@ -316,7 +329,10 @@ const JobPost = () => {
           type: doc.type,
           url: doc.url || null, // Store the Supabase URL
           uploadedAt: doc.uploadedAt || new Date().toISOString()
-        }))
+        })),
+        // Add VIP display metadata
+        vipFeePaid: formData.displayType === 'vip' ? (!isEditMode ? 10000 : 0) : 0,
+        vipActivatedAt: formData.displayType === 'vip' ? new Date().toISOString() : null
       };
 
       // If in edit mode, include the project ID
@@ -326,7 +342,12 @@ const JobPost = () => {
 
       const savedProject = await saveProject(cleanData);
       if (savedProject?.id) {
-        const message = isEditMode ? 'Dự án đã được cập nhật thành công!' : 'Dự án đã được đăng thành công!';
+        let message = isEditMode ? 'Dự án đã được cập nhật thành công!' : 'Dự án đã được đăng thành công!';
+        
+        if (formData.displayType === 'vip' && !isEditMode) {
+          message += '\n\nBài đăng VIP của bạn đã được kích hoạt với hiệu ứng 3D đặc biệt!';
+        }
+        
         alert(message);
         navigate(`/job-details/${savedProject.id}`);
       } else {
@@ -749,6 +770,148 @@ const JobPost = () => {
               </div>
             </section>
 
+            {/* Display Type Selection */}
+            <section>
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">Loại hiển thị bài đăng</h2>
+              <div className="space-y-4">
+                <p className="text-gray-600 text-sm">
+                  Chọn cách thức hiển thị bài đăng của bạn trong marketplace
+                </p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Standard Card */}
+                  <div 
+                    className={`relative border-2 rounded-lg p-6 cursor-pointer transition-all ${
+                      formData.displayType === 'standard' 
+                        ? 'border-blue-500 bg-blue-50' 
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                    onClick={() => handleInputChange('displayType', 'standard')}
+                  >
+                    <div className="flex items-start space-x-3">
+                      <input
+                        type="radio"
+                        name="displayType"
+                        value="standard"
+                        checked={formData.displayType === 'standard'}
+                        onChange={() => handleInputChange('displayType', 'standard')}
+                        className="mt-1"
+                      />
+                      <div className="flex-1">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                          Hiển thị thường
+                        </h3>
+                        <p className="text-gray-600 text-sm mb-3">
+                          Bài đăng sẽ hiển thị với giao diện tiêu chuẩn, đơn giản và dễ đọc.
+                        </p>
+                        <div className="text-green-600 font-semibold">
+                          Miễn phí
+                        </div>
+                        <div className="mt-3 space-y-1 text-xs text-gray-500">
+                          <div>✓ Hiển thị đầy đủ thông tin</div>
+                          <div>✓ Giao diện tiêu chuẩn</div>
+                          <div>✓ Tương thích mọi thiết bị</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* VIP Card */}
+                  <div 
+                    className={`relative border-2 rounded-lg p-6 cursor-pointer transition-all ${
+                      formData.displayType === 'vip' 
+                        ? 'border-purple-500 bg-purple-50' 
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                    onClick={() => handleInputChange('displayType', 'vip')}
+                  >
+                    <div className="flex items-start space-x-3">
+                      <input
+                        type="radio"
+                        name="displayType"
+                        value="vip"
+                        checked={formData.displayType === 'vip'}
+                        onChange={() => handleInputChange('displayType', 'vip')}
+                        className="mt-1"
+                      />
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2 mb-2">
+                          <h3 className="text-lg font-semibold text-gray-900">
+                            Hiển thị VIP
+                          </h3>
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-yellow-400 to-orange-500 text-white">
+                            ⭐ VIP
+                          </span>
+                        </div>
+                        <p className="text-gray-600 text-sm mb-3">
+                          Bài đăng nổi bật với hiệu ứng 3D tuyệt đẹp, thu hút nhiều freelancer hơn.
+                        </p>
+                        <div className="text-purple-600 font-semibold">
+                          10.000 VND
+                        </div>
+                        <div className="mt-3 space-y-1 text-xs text-gray-500">
+                          <div>✓ Hiệu ứng 3D chuyên nghiệp</div>
+                          <div>✓ Badge VIP nổi bật</div>
+                          <div>✓ Hiệu ứng ánh sáng độc đáo</div>
+                          <div>✓ Tăng tỷ lệ xem và ứng tuyển</div>
+                        </div>
+                      </div>
+                    </div>
+                    {formData.displayType === 'vip' && (
+                      <div className="absolute top-3 right-3">
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                          Đã chọn
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Payment Notice for VIP */}
+                {formData.displayType === 'vip' && (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <div className="flex items-start space-x-3">
+                      <div className="flex-shrink-0">
+                        <span className="text-yellow-400 text-lg">💳</span>
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-medium text-yellow-800 mb-1">
+                          Thông tin thanh toán
+                        </h4>
+                        <p className="text-yellow-700 text-sm">
+                          Phí VIP 10.000 VND sẽ được thu khi đăng bài thành công. 
+                          Bài đăng VIP sẽ có hiệu ứng 3D đặc biệt và thu hút nhiều freelancer hơn.
+                        </p>
+                        <div className="mt-2 text-xs text-yellow-600">
+                          <strong>Lưu ý:</strong> Phí VIP chỉ áp dụng cho bài đăng mới. 
+                          Bài đăng đã tồn tại có thể nâng cấp lên VIP trong phần chỉnh sửa.
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Preview Button */}
+                <div className="flex justify-center">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      if (formData.displayType === 'vip') {
+                        window.open('/job-marketplace', '_blank');
+                      } else {
+                        window.open('/job-marketplace', '_blank');
+                      }
+                    }}
+                    className="flex items-center space-x-2"
+                  >
+                    <span>👁️</span>
+                    <span>Xem trước giao diện {formData.displayType === 'vip' ? 'VIP' : 'thường'}</span>
+                  </Button>
+                </div>
+              </div>
+            </section>
+
             {/* Submit Buttons */}
             <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
               <Button
@@ -758,8 +921,13 @@ const JobPost = () => {
               >
                 Hủy
               </Button>
-              <Button type="submit">
+              <Button type="submit" className="relative">
                 {isEditMode ? 'Cập nhật dự án' : 'Đăng dự án'}
+                {formData.displayType === 'vip' && !isEditMode && (
+                  <span className="ml-2 text-xs bg-yellow-400 text-yellow-900 px-2 py-1 rounded-full">
+                    +10.000đ VIP
+                  </span>
+                )}
               </Button>
             </div>
           </form>

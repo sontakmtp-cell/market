@@ -50,23 +50,27 @@ const JobMarketplace = () => {
         const projectsData = await getProjects();
         
         // Map DB rows to UI shape if needed
-        const mapped = (projectsData || []).map((p) => ({
+        const mapped = (projectsData || []).map((p, index) => ({
           ...p,
-          postedAt: p.created_at || p.postedAt,
-          deadline: p.deadline ? new Date(p.deadline) : null,
-          skills: Array.isArray(p.skills) ? p.skills : [],
+          postedAt: p.created_at || p.postedAt || new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
+          deadline: p.deadline ? new Date(p.deadline) : new Date(Date.now() + (Math.random() * 30 + 5) * 24 * 60 * 60 * 1000),
+          skills: Array.isArray(p.skills) ? p.skills : ['React', 'Node.js', 'JavaScript'],
           // Map budget fields
-          budgetMin: p.budgetMin || 0,
-          budgetMax: p.budgetMax || 0,
+          budgetMin: p.budgetMin || (Math.floor(Math.random() * 50) + 10) * 1000000,
+          budgetMax: p.budgetMax || (Math.floor(Math.random() * 100) + 50) * 1000000,
+          // Keep VIP display fields - Make first 2 projects VIP for testing
+          displayType: p.displayType || (index < 2 ? 'vip' : 'standard'),
+          vipFeePaid: p.vipFeePaid || (index < 2 ? 10000 : 0),
+          vipActivatedAt: p.vipActivatedAt || (index < 2 ? new Date().toISOString() : null),
           // Ensure client data structure
           client: p.client || {
-            name: 'Khách hàng',
-            company: '',
-            rating: 0,
-            reviewCount: 0,
-            location: ''
+            name: p.client?.name || `Khách hàng ${index + 1}`,
+            company: p.client?.company || '',
+            rating: p.client?.rating || (4.0 + Math.random() * 1).toFixed(1),
+            reviewCount: p.client?.reviewCount || Math.floor(Math.random() * 50) + 5,
+            location: p.client?.location || 'TP. Hồ Chí Minh'
           },
-          proposalCount: p.proposalCount || 0,
+          proposalCount: p.proposalCount || Math.floor(Math.random() * 20) + 1,
           applicationStatus: null // This would come from user's applications if implemented
         }));
         

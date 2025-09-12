@@ -72,12 +72,13 @@ export const saveJob = async (userId, jobId) => {
 
     const { data, error } = await supabase
       .from('saved_jobs')
-      .insert([
+      .upsert(
         {
           user_id: userId,
           job_id: jobId
-        }
-      ])
+        },
+        { onConflict: 'user_id,job_id' }
+      )
       .select()
       .single();
 
@@ -142,7 +143,7 @@ export const checkIfJobSaved = async (userId, jobId) => {
       .select('id')
       .eq('user_id', userId)
       .eq('job_id', jobId)
-      .single();
+      .maybeSingle();
 
     if (error) {
       // If no record found, that's expected - job is not saved

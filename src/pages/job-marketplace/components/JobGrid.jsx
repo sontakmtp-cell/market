@@ -1,5 +1,6 @@
 import React from 'react';
 import JobCard from './JobCard';
+import JobCardVIP from './JobCardVIP';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 import { useAuth } from '../../../hooks/useAuth';
@@ -114,19 +115,33 @@ const JobGrid = ({
   }
 
   return (
-    <div className="flex-1 p-6">
+    <div className="flex-1 p-4 sm:p-6">
       {/* Jobs Grid */}
       <div className={`${
-        viewMode === 'grid' ?'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6' :'space-y-4'
+        viewMode === 'grid' 
+          ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-6' 
+          : 'space-y-4'
       }`}>
-        {jobs?.map((job) => (
-          <JobCard 
-            key={job?.id} 
-            job={job} 
-            userRole={userRole}
-            onShowNotification={onShowNotification}
-          />
-        ))}
+        {jobs?.map((job) => {
+          // Check if job should display as VIP
+          const isVIP = job?.displayType === 'vip' || job?.vipFeePaid > 0;
+          
+          return isVIP ? (
+            <JobCardVIP
+              key={job?.id} 
+              job={job} 
+              userRole={userRole}
+              onShowNotification={onShowNotification}
+            />
+          ) : (
+            <JobCard 
+              key={job?.id} 
+              job={job} 
+              userRole={userRole}
+              onShowNotification={onShowNotification}
+            />
+          );
+        })}
       </div>
       {/* Load More Button */}
       {hasMore && (
