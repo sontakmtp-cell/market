@@ -46,13 +46,13 @@ const JobCardVIP = ({ job, userRole = 'freelancer', onShowNotification }) => {
 
   const getCategoryColor = (category) => {
     const colors = {
-      'structural': '#6366f1',
-      'mechanical': '#10b981',
-      'electronic': '#f59e0b',
-      'crane': '#8b5cf6',
-      'architecture': '#ef4444'
+      'structural': '#4a90e2',
+      'mechanical': '#5cb85c',
+      'electronic': '#f0ad4e',
+      'crane': '#9b59b6',
+      'architecture': '#e74c3c'
     };
-    return colors?.[category] || '#6366f1';
+    return colors?.[category] || '#6c757d';
   };
 
   const formatBudget = (min, max) => {
@@ -169,9 +169,9 @@ const JobCardVIP = ({ job, userRole = 'freelancer', onShowNotification }) => {
 
   return (
     <div className="card-effect">
-      <div className="card-inner" style={{ '--card-bg': 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)', '--card-accent': getCategoryColor(job?.category) }}>
+      <div className="card-inner" style={{ '--card-bg': '#ffffff', '--card-accent': getCategoryColor(job?.category) }}>
         {/* Liquid Background Effect */}
-        <div className="card__liquid" style={{ background: `linear-gradient(135deg, ${getCategoryColor(job?.category)} 0%, #a855f7 50%, #ec4899 100%)` }}></div>
+        <div className="card__liquid" style={{ background: getCategoryColor(job?.category) }}></div>
         
         {/* Glow Effect */}
         <div className="card__glow"></div>
@@ -356,11 +356,11 @@ const JobCardVIP = ({ job, userRole = 'freelancer', onShowNotification }) => {
               </div>
               <div className="flex flex-col space-y-1 items-end">
                 <div className="flex items-center space-x-1">
-                  <Icon name="Users" size={12} className="flex-shrink-0" style={{ color: getCategoryColor(job?.category) }} />
+                  <Icon name="Users" size={12} className="text-blue-600 flex-shrink-0" />
                   <span className="text-xs text-gray-500">Đề xuất</span>
                 </div>
                 <div className="flex items-center space-x-1">
-                  <span className="font-medium text-xs" style={{ color: getCategoryColor(job?.category) }}>
+                  <span className="font-medium text-blue-600 text-xs">
                     {job?.proposalCount || 0}
                   </span>
                 </div>
