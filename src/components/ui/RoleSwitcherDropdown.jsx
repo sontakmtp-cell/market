@@ -56,10 +56,15 @@ const RoleSwitcherDropdown = ({ currentRole, onRoleChange, roles = {} }) => {
 
   const handleToggle = () => setOpen(true);
   const handleSelect = (key) => {
-    if (typeof onRoleChange === 'function') {
-      onRoleChange(key);
-    }
+    // Ngăn chặn event bubbling và default behavior
     setOpen(false);
+    
+    // Đảm bảo callback được gọi sau khi dropdown đã đóng
+    setTimeout(() => {
+      if (typeof onRoleChange === 'function') {
+        onRoleChange(key);
+      }
+    }, 100);
   };
 
   return (
@@ -98,7 +103,11 @@ const RoleSwitcherDropdown = ({ currentRole, onRoleChange, roles = {} }) => {
               <button
                 key={key}
                 role="menuitem"
-                onClick={() => handleSelect(key)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleSelect(key);
+                }}
                 className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left transition-colors ${
                   key === activeRoleKey
                     ? 'bg-accent text-accent-foreground'

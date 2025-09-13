@@ -58,13 +58,18 @@ const JobCard = ({ job, userRole = 'freelancer', onShowNotification }) => {
     return `${min?.toLocaleString('vi-VN')} - ${max?.toLocaleString('vi-VN')} VND`;
   };
 
-  const formatDeadline = (deadline) => {
-    const date = new Date(deadline);
-    return date?.toLocaleDateString('vi-VN');
+  const formatPostExpiration = (postExpiresAt, postDuration) => {
+    if (!postExpiresAt) {
+      return `${postDuration || 30} ngày`;
+    }
+    const date = new Date(postExpiresAt);
+    const daysLeft = Math.ceil((date - new Date()) / (1000 * 60 * 60 * 24));
+    return daysLeft > 0 ? `Còn ${daysLeft} ngày` : 'Đã hết hạn';
   };
 
-  const getUrgencyColor = (deadline) => {
-    const daysLeft = Math.ceil((new Date(deadline) - new Date()) / (1000 * 60 * 60 * 24));
+  const getPostExpirationColor = (postExpiresAt) => {
+    if (!postExpiresAt) return 'text-gray-600';
+    const daysLeft = Math.ceil((new Date(postExpiresAt) - new Date()) / (1000 * 60 * 60 * 24));
     if (daysLeft <= 3) return 'text-red-600';
     if (daysLeft <= 7) return 'text-yellow-600';
     return 'text-green-600';
@@ -203,7 +208,7 @@ const JobCard = ({ job, userRole = 'freelancer', onShowNotification }) => {
           </span>
         )}
       </div>
-      {/* Budget and Deadline */}
+      {/* Budget and Post Duration */}
       <div className="flex items-center justify-between mb-4">
         <div>
           <div className="text-sm text-muted-foreground">Ngân sách</div>
@@ -212,9 +217,9 @@ const JobCard = ({ job, userRole = 'freelancer', onShowNotification }) => {
           </div>
         </div>
         <div className="text-right">
-          <div className="text-sm text-muted-foreground">Hạn chót</div>
-          <div className={`font-semibold ${getUrgencyColor(job?.deadline)}`}>
-            {formatDeadline(job?.deadline)}
+          <div className="text-sm text-muted-foreground">Bài đăng</div>
+          <div className={`font-semibold ${getPostExpirationColor(job?.postExpiresAt)}`}>
+            {formatPostExpiration(job?.postExpiresAt, job?.postDuration)}
           </div>
         </div>
       </div>

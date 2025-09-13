@@ -59,9 +59,13 @@ const JobCardVIP = ({ job, userRole = 'freelancer', onShowNotification }) => {
     return `${min?.toLocaleString('vi-VN')} - ${max?.toLocaleString('vi-VN')} VND`;
   };
 
-  const formatDeadline = (deadline) => {
-    const date = new Date(deadline);
-    return date?.toLocaleDateString('vi-VN');
+  const formatPostExpiration = (postExpiresAt, postDuration) => {
+    if (!postExpiresAt) {
+      return `${postDuration || 30} ngày`;
+    }
+    const date = new Date(postExpiresAt);
+    const daysLeft = Math.ceil((date - new Date()) / (1000 * 60 * 60 * 24));
+    return daysLeft > 0 ? `Còn ${daysLeft} ngày` : 'Hết hạn';
   };
 
   const formatTimeAgo = (dateString) => {
@@ -342,16 +346,16 @@ const JobCardVIP = ({ job, userRole = 'freelancer', onShowNotification }) => {
             </div>
           </div>
 
-          {/* Deadline and Proposal Count - Enhanced */}
+          {/* Post Duration and Proposal Count - Enhanced */}
           <div className="card__meta-info">
             <div className="grid grid-cols-2 gap-2 text-sm">
               <div className="flex flex-col space-y-1">
                 <div className="flex items-center space-x-1">
                   <Icon name="Clock" size={12} className="text-gray-500 flex-shrink-0" />
-                  <span className="text-xs text-gray-500">Hạn chót</span>
+                  <span className="text-xs text-gray-500">Bài đăng</span>
                 </div>
                 <span className="font-medium text-gray-700 truncate text-xs">
-                  {formatDeadline(job?.deadline)}
+                  {formatPostExpiration(job?.postExpiresAt, job?.postDuration)}
                 </span>
               </div>
               <div className="flex flex-col space-y-1 items-end">

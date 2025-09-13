@@ -160,12 +160,32 @@ const SearchHeader = ({
             {/* Post Job Button for Clients */}
             {userRole === 'client' && (
               isAuthenticated ? (
-                <Link to="/job-post">
-                  <Button variant="default">
-                    <Icon name="Plus" size={16} className="mr-2" />
-                    <span className="hidden sm:inline">Đăng dự án mới</span>
-                    <span className="sm:hidden">Đăng</span>
-                  </Button>
+                <Link to="/job-post" className="btn-container">
+                  <button className="btn">
+                    <div className="btn-drawer transition-top">
+                      <Icon name="Plus" size={16} />
+                    </div>
+                    <div className="btn-drawer transition-bottom">
+                      <Icon name="Plus" size={16} />
+                    </div>
+                    <span className="btn-text">
+                      <Icon name="Plus" size={16} className="mr-2 inline" />
+                      <span className="hidden sm:inline">Đăng dự án mới</span>
+                      <span className="sm:hidden">Đăng</span>
+                    </span>
+                    <svg viewBox="0 0 32 32" className="btn-corner">
+                      <path d="M16 0 L32 16 L16 32 Z" strokeWidth="2" />
+                    </svg>
+                    <svg viewBox="0 0 32 32" className="btn-corner">
+                      <path d="M16 0 L32 16 L16 32 Z" strokeWidth="2" />
+                    </svg>
+                    <svg viewBox="0 0 32 32" className="btn-corner">
+                      <path d="M16 0 L32 16 L16 32 Z" strokeWidth="2" />
+                    </svg>
+                    <svg viewBox="0 0 32 32" className="btn-corner">
+                      <path d="M16 0 L32 16 L16 32 Z" strokeWidth="2" />
+                    </svg>
+                  </button>
                 </Link>
               ) : (
                 <Button 

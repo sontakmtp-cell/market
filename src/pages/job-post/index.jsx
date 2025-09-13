@@ -11,7 +11,8 @@ import { saveProject, getProjectById, getProjectCategories } from '../../utils/d
 // Helper function to generate unique IDs
 const genId = (prefix = 'id') => `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 import { useSupabase } from '../../contexts/SupabaseContext';
-import { useCategories } from '../../hooks/useCategories';
+// Use absolute import based on jsconfig baseUrl (./src)
+import { useCategories } from 'hooks/useCategories';
 import { CategoryService } from '../../services/categoryService';
 
 const JobPost = () => {
@@ -36,7 +37,9 @@ const JobPost = () => {
     budgetMin: '',
     budgetMax: '',
     currency: 'VND',
+    currencyOptions: ['VND'], // Array to track selected currency for checkbox approach
     postDuration: 30, // Default to 30 days
+    postDurationOptions: [30], // Array to track selected durations for checkbox approach
     isUrgent: false,
     location: '',
     attachments: [],
@@ -55,12 +58,6 @@ const JobPost = () => {
 
   const [errors, setErrors] = useState({});
   const [currentSkill, setCurrentSkill] = useState('');
-
-  // Currencies array stays the same
-  const currencies = [
-    { value: 'VND', label: 'VND' },
-    { value: 'USD', label: 'USD' }
-  ];
   // Load project data for editing
   useEffect(() => {
     if (id) {
@@ -80,7 +77,9 @@ const JobPost = () => {
               budgetMin: projectData.budgetMin ? projectData.budgetMin.toString() : '',
               budgetMax: projectData.budgetMax ? projectData.budgetMax.toString() : '',
               currency: projectData.currency || 'VND',
+              currencyOptions: projectData.currency ? [projectData.currency] : ['VND'],
               postDuration: projectData.postDuration || 30,
+              postDurationOptions: projectData.postDuration ? [projectData.postDuration] : [30],
               isUrgent: Boolean(projectData.isUrgent),
               location: projectData.location || '',
               attachments: Array.isArray(projectData.attachments) ? projectData.attachments : [],
@@ -151,6 +150,52 @@ const JobPost = () => {
         [field]: value
       }
     }));
+  };
+
+  const handlePostDurationChange = (duration) => {
+    setFormData(prev => {
+      const currentSelected = prev.postDurationOptions || [];
+      const isSelected = currentSelected.includes(duration);
+      
+      if (isSelected) {
+        // If clicking the same option, unselect it
+        return {
+          ...prev,
+          postDurationOptions: [],
+          postDuration: 30 // Default back to 30
+        };
+      } else {
+        // Select only this option (unselect all others)
+        return {
+          ...prev,
+          postDurationOptions: [duration],
+          postDuration: duration
+        };
+      }
+    });
+  };
+
+  const handleCurrencyChange = (currency) => {
+    setFormData(prev => {
+      const currentSelected = prev.currencyOptions || [];
+      const isSelected = currentSelected.includes(currency);
+      
+      if (isSelected) {
+        // If clicking the same option, unselect it
+        return {
+          ...prev,
+          currencyOptions: [],
+          currency: 'VND' // Default back to VND
+        };
+      } else {
+        // Select only this option (unselect all others)
+        return {
+          ...prev,
+          currencyOptions: [currency],
+          currency: currency
+        };
+      }
+    });
   };
 
   const addSkill = () => {
@@ -264,8 +309,8 @@ const JobPost = () => {
       newErrors.budgetMin = 'Ngân sách tối thiểu không được lớn hơn ngân sách tối đa';
     }
 
-    if (!formData.postDuration || ![7, 15, 30].includes(parseInt(formData.postDuration))) {
-      newErrors.postDuration = 'Thời gian duy trì bài đăng là bắt buộc';
+    if (!formData.postDurationOptions || formData.postDurationOptions.length === 0) {
+      newErrors.postDuration = 'Vui lòng chọn thời gian duy trì bài đăng';
     }
 
     setErrors(newErrors);
@@ -444,35 +489,19 @@ const JobPost = () => {
                   />
                 </div>
 
-                <div className="flex items-center space-x-2">
+                <div className="checklist-item">
                   <input
                     type="checkbox"
                     id="isUrgent"
+                    className="checklist-checkbox"
                     checked={formData.isUrgent}
                     onChange={(e) => handleInputChange('isUrgent', e.target.checked)}
-                    className="rounded border-gray-300"
                   />
-                  <label htmlFor="isUrgent" className="text-sm text-gray-700">
+                  <label htmlFor="isUrgent" className="checklist-label">
                     Dự án gấp
                   </label>
                 </div>
-                {/* Styled urgent checkbox */}
-                <div>
-                  <div className="magic-checkbox-group">
-                    <label className="magic-check">
-                      <input
-                        type="checkbox"
-                        checked={formData.isUrgent}
-                        onChange={(e) => handleInputChange('isUrgent', e.target.checked)}
-                      />
-                      <span className="liquid-box">
-                        <span className="liquid-fill"></span>
-                        <span className="sparkle"></span>
-                      </span>
-                      <span className="magic-label">Dự án gấp</span>
-                    </label>
-                  </div>
-                </div>
+                
               </div>
             </section>
 
@@ -537,14 +566,18 @@ const JobPost = () => {
                       )}
                     </div>
                   ))}
-                  <Button
+                  <button
                     type="button"
-                    variant="outline"
                     onClick={addObjective}
-                    className="text-sm"
+                    className="button"
                   >
-                    + Thêm mục tiêu
-                  </Button>
+                    <span className="button__text">Thêm mục tiêu</span>
+                    <span className="button__icon">
+                      <svg className="svg" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 6v12m6-6H6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                      </svg>
+                    </span>
+                  </button>
                 </div>
               </div>
             </section>
@@ -611,27 +644,80 @@ const JobPost = () => {
                   />
                 </div>
                 <div>
-                  <Select
-                    label="Đơn vị tiền tệ"
-                    value={formData.currency}
-                    onChange={(value) => handleInputChange('currency', value)}
-                    options={currencies}
-                  />
+                  <div className="checklist-container">
+                    <h3 className="checklist-title">Đơn vị tiền tệ</h3>
+                    <div className="checklist-item">
+                      <input
+                        type="checkbox"
+                        id="currency-vnd"
+                        className="checklist-checkbox"
+                        checked={formData.currencyOptions && formData.currencyOptions.includes('VND')}
+                        onChange={() => handleCurrencyChange('VND')}
+                      />
+                      <label htmlFor="currency-vnd" className="checklist-label">
+                        VND
+                      </label>
+                    </div>
+                    <div className="checklist-item">
+                      <input
+                        type="checkbox"
+                        id="currency-usd"
+                        className="checklist-checkbox"
+                        checked={formData.currencyOptions && formData.currencyOptions.includes('USD')}
+                        onChange={() => handleCurrencyChange('USD')}
+                      />
+                      <label htmlFor="currency-usd" className="checklist-label">
+                        USD
+                      </label>
+                    </div>
+                  </div>
                 </div>
                 <div>
-                  <Select
-                    label="Thời gian duy trì bài đăng *"
-                    value={formData.postDuration}
-                    onChange={(value) => handleInputChange('postDuration', value)}
-                    options={[
-                      { value: 7, label: '7 ngày' },
-                      { value: 15, label: '15 ngày' },
-                      { value: 30, label: '30 ngày' }
-                    ]}
-                    error={errors.postDuration}
-                  />
+                  <div className="checklist-container">
+                    <h3 className="checklist-title">Thời gian duy trì bài đăng *</h3>
+                    <div className="checklist-item">
+                      <input
+                        type="checkbox"
+                        id="duration-7"
+                        className="checklist-checkbox"
+                        checked={formData.postDurationOptions && formData.postDurationOptions.includes(7)}
+                        onChange={() => handlePostDurationChange(7)}
+                      />
+                      <label htmlFor="duration-7" className="checklist-label">
+                        7 ngày
+                      </label>
+                    </div>
+                    <div className="checklist-item">
+                      <input
+                        type="checkbox"
+                        id="duration-15"
+                        className="checklist-checkbox"
+                        checked={formData.postDurationOptions && formData.postDurationOptions.includes(15)}
+                        onChange={() => handlePostDurationChange(15)}
+                      />
+                      <label htmlFor="duration-15" className="checklist-label">
+                        15 ngày
+                      </label>
+                    </div>
+                    <div className="checklist-item">
+                      <input
+                        type="checkbox"
+                        id="duration-30"
+                        className="checklist-checkbox"
+                        checked={formData.postDurationOptions && formData.postDurationOptions.includes(30)}
+                        onChange={() => handlePostDurationChange(30)}
+                      />
+                      <label htmlFor="duration-30" className="checklist-label">
+                        30 ngày
+                      </label>
+                    </div>
+                  </div>
+                  {errors.postDuration && (
+                    <p className="text-red-500 text-sm mt-1">{errors.postDuration}</p>
+                  )}
                   <p className="text-sm text-gray-600 mt-1">
-                    Bài đăng sẽ tự động bị xóa sau thời gian này nếu không có đề xuất nào được chấp nhận
+                    Bài đăng sẽ tự động bị xóa sau thời gian này nếu không có đề xuất nào được chấp nhận. 
+                    Vui lòng chọn một thời gian duy trì.
                   </p>
                 </div>
               </div>
@@ -882,25 +968,6 @@ const JobPost = () => {
                     </div>
                   </div>
                 )}
-
-                {/* Preview Button */}
-                <div className="flex justify-center">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      if (formData.displayType === 'vip') {
-                        window.open('/job-marketplace', '_blank');
-                      } else {
-                        window.open('/job-marketplace', '_blank');
-                      }
-                    }}
-                    className="flex items-center space-x-2"
-                  >
-                    <span>👁️</span>
-                    <span>Xem trước giao diện {formData.displayType === 'vip' ? 'VIP' : 'thường'}</span>
-                  </Button>
-                </div>
               </div>
             </section>
 

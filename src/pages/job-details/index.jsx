@@ -54,86 +54,65 @@ const JobDetails = () => {
       "Đảm bảo tiến độ bàn giao đúng hạn",
       "Hỗ trợ kỹ thuật trong quá trình thi công"
     ],
-    technicalRequirements: [
-      {
-        category: "Thiết kế cấu trúc",
-        items: [
-          "Sử dụng phần mềm SAP2000 hoặc ETABS",
-          "Tính toán theo TCVN 5575:2018 và TCVN 2737:1995",
-          "Thiết kế chống động đất theo TCVN 9386:2012",
-          "Kiểm tra ổn định tổng thể"
-        ]
-      },
-      {
-        category: "Bản vẽ kỹ thuật",
-        items: [
-          "Bản vẽ tổng thể 1:200",
-          "Bản vẽ chi tiết nút 1:20",
-          "Bản vẽ móng và neo 1:50",
-          "Định mức vật liệu chi tiết"
-        ]
-      },
-      {
-        category: "Tiêu chuẩn áp dụng",
-        items: [
-          "TCVN 5575:2018 - Kết cấu thép",
-          "TCVN 2737:1995 - Tải trọng và tác động",
-          "TCVN 9386:2012 - Thiết kế chống động đất",
-          "TCVN 4453:1995 - Móng cọc"
-        ]
-      }
-    ],
     deliverables: [
       {
         title: "Báo cáo tính toán kết cấu",
         description: "File tính toán chi tiết với SAP2000, kiểm tra ổn định",
-        deadline: "Tuần 4"
+        deadline: "2025-02-15"
       },
       {
         title: "Bản vẽ thiết kế kỹ thuật",
         description: "Bộ bản vẽ hoàn chỉnh định dạng DWG và PDF",
-        deadline: "Tuần 8"
+        deadline: "2025-03-15"
       },
       {
         title: "Thuyết minh thiết kế",
         description: "Thuyết minh kỹ thuật và hướng dẫn thi công",
-        deadline: "Tuần 10"
+        deadline: "2025-04-01"
       },
       {
         title: "Định mức vật liệu",
         description: "Bảng thống kê vật liệu chi tiết theo từng hạng mục",
-        deadline: "Tuần 12"
+        deadline: "2025-04-15"
       }
     ],
     referenceFiles: [
       {
+        id: "file-001",
         name: "Bản vẽ mặt bằng tổng thể.pdf",
         size: "2.4 MB",
-        type: "pdf",
-        url: null // Will be populated when files are uploaded via job-post
+        type: "application/pdf",
+        url: null, // Will be populated when files are uploaded via job-post
+        uploadedAt: "2025-01-10T08:00:00Z"
       },
       {
+        id: "file-002",
         name: "Yêu cầu kỹ thuật chi tiết.docx",
         size: "856 KB",
-        type: "doc", 
-        url: null
+        type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        url: null,
+        uploadedAt: "2025-01-10T08:15:00Z"
       },
       {
+        id: "file-003",
         name: "Khảo sát địa chất.pdf",
         size: "3.1 MB",
-        type: "pdf",
-        url: null
+        type: "application/pdf",
+        url: null,
+        uploadedAt: "2025-01-10T08:30:00Z"
       },
       {
+        id: "file-004",
         name: "Bản vẽ kiến trúc tham khảo.dwg",
-        size: "1.8 MB", 
-        type: "dwg",
-        url: null
+        size: "1.8 MB",
+        type: "application/octet-stream",
+        url: null,
+        uploadedAt: "2025-01-10T08:45:00Z"
       }
     ],
     requiredSkills: [
       "SAP2000/ETABS",
-      "AutoCAD",
+      "AutoCAD", 
       "Thiết kế kết cấu thép",
       "TCVN 5575:2018",
       "Tính toán chống động đất",
@@ -203,7 +182,12 @@ const JobDetails = () => {
             competitionLevel: Math.min(5, Math.max(1, fetchedProject.proposalCount ? Math.ceil(fetchedProject.proposalCount / 3) : 1)),
             views: Math.floor(Math.random() * 200) + 50, // Random views for now
             timeLeft: fetchedProject.deadline ? getTimeLeft(fetchedProject.deadline) : 'Không giới hạn',
-            referenceFiles: fetchedProject.attachments || []
+            referenceFiles: fetchedProject.attachments || [],
+            // Ensure skills are properly mapped
+            requiredSkills: fetchedProject.skills || [],
+            // Map objectives and deliverables if they exist
+            objectives: fetchedProject.objectives || [],
+            deliverables: fetchedProject.deliverables || []
           };
           setProject(mappedProject);
         } else {

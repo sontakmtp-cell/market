@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import Icon from '../AppIcon';
 import Button from './Button';
 import RoleDropdown from './RoleSwitcherDropdown';
@@ -11,6 +11,7 @@ const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user, signOut } = useSupabase();
   const location = useLocation();
+  const navigate = useNavigate();
 
   const isAuthenticated = !!user;
   const userRole = user?.user_metadata?.role || 'freelancer';
@@ -55,7 +56,37 @@ const Header = () => {
   };
 
   const handleLogout = async () => {
-    try { await signOut(); } finally { window.location.href = '/login'; }
+    try { 
+      console.log('Attempting logout...');
+      const { error } = await signOut(); 
+      if (error) {
+        console.error('Logout error:', error);
+        return;
+      }
+      console.log('Logout successful, navigating to login...');
+      navigate('/login', { replace: true }); 
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
+
+  const handleRoleChange = (roleKey) => {
+    try { 
+      console.log('Changing role to:', roleKey);
+      localStorage.setItem('userRole', roleKey); 
+      
+      // Chọn đường dẫn phù hợp theo vai trò
+      const path = (roleKey === 'candidate' || roleKey === 'employer')
+        ? '/recruitment-management-dashboard'
+        : '/freelancer-dashboard';
+      
+      console.log('Navigating to:', path);
+      
+      // Sử dụng navigate thay vì window.location.href để tránh reload
+      navigate(path, { replace: false });
+    } catch (error) {
+      console.error('Role change error:', error);
+    }
   };
 
   const toggleMenu = () => {
@@ -126,13 +157,7 @@ const Header = () => {
                 <RoleDropdown
                   currentRole={currentRole}
                   roles={ROLE_CONFIG}
-                  onRoleChange={(roleKey) => {
-                    try { localStorage.setItem('userRole', roleKey); } catch {}
-                    const path = (roleKey === 'candidate' || roleKey === 'employer')
-                      ? '/recruitment-management-dashboard'
-                      : '/freelancer-dashboard';
-                    window.location.href = path;
-                  }}
+                  onRoleChange={handleRoleChange}
                 />
                 <div className="relative group">
                   <Button variant="ghost" className="flex items-center space-x-2">
@@ -191,13 +216,7 @@ const Header = () => {
                 <MobileRoleButton
                   currentRole={currentRole}
                   roles={ROLE_CONFIG}
-                  onRoleChange={(roleKey) => {
-                    try { localStorage.setItem('userRole', roleKey); } catch {}
-                    const path = (roleKey === 'candidate' || roleKey === 'employer')
-                      ? '/recruitment-management-dashboard'
-                      : '/freelancer-dashboard';
-                    window.location.href = path;
-                  }}
+                  onRoleChange={handleRoleChange}
                 />
               </div>
             )}

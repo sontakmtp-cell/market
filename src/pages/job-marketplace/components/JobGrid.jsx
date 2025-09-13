@@ -123,8 +123,9 @@ const JobGrid = ({
           : 'space-y-4'
       }`}>
         {jobs?.map((job) => {
-          // Check if job should display as VIP
-          const isVIP = job?.displayType === 'vip' || job?.vipFeePaid > 0;
+          // Check if job should display as VIP based on displayType only
+          // This ensures user's choice in job-post is respected
+          const isVIP = job?.displayType === 'vip';
           
           return isVIP ? (
             <JobCardVIP

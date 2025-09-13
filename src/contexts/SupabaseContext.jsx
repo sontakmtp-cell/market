@@ -33,7 +33,9 @@ export function SupabaseProvider({ children }) {
 
     const { data: sub } = supabase.auth.onAuthStateChange((_event, newSession) => {
       console.log('Auth state changed:', _event, newSession);
-      setSession(newSession ?? null);
+      if (isMounted) {
+        setSession(newSession ?? null);
+      }
     });
 
     return () => {
@@ -57,7 +59,21 @@ export function SupabaseProvider({ children }) {
         supabase.auth.signUp({ email, password, options }),
       signInWithProvider: (provider, options = {}) =>
         supabase.auth.signInWithOAuth({ provider, options }),
-      signOut: () => supabase.auth.signOut(),
+      signOut: async () => {
+        try {
+          console.log('Signing out...');
+          const { error } = await supabase.auth.signOut();
+          if (error) {
+            console.error('Sign out error:', error);
+            throw error;
+          }
+          console.log('Sign out successful');
+          return { error: null };
+        } catch (error) {
+          console.error('Sign out failed:', error);
+          return { error };
+        }
+      },
     };
   }, [session, loading]);
 

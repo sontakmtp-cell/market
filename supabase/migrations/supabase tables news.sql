@@ -26,8 +26,32 @@ CREATE TABLE public.applications (
   applicationDate timestamp with time zone DEFAULT now(),
   status text DEFAULT 'submitted'::text,
   CONSTRAINT applications_pkey PRIMARY KEY (id),
-  CONSTRAINT applications_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id),
-  CONSTRAINT applications_jobId_fkey FOREIGN KEY (jobId) REFERENCES public.recruitment_jobs(id)
+  CONSTRAINT applications_jobId_fkey FOREIGN KEY (jobId) REFERENCES public.recruitment_jobs(id),
+  CONSTRAINT applications_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.categories (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  name text NOT NULL,
+  slug text NOT NULL UNIQUE,
+  description text,
+  parent_id bigint,
+  is_active boolean DEFAULT true,
+  sort_order integer DEFAULT 0,
+  icon text,
+  color text,
+  CONSTRAINT categories_pkey PRIMARY KEY (id),
+  CONSTRAINT categories_parent_id_fkey FOREIGN KEY (parent_id) REFERENCES public.categories(id)
+);
+CREATE TABLE public.categories_projects (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  category_id bigint NOT NULL,
+  project_id bigint NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT categories_projects_pkey PRIMARY KEY (id),
+  CONSTRAINT categories_projects_project_id_fkey FOREIGN KEY (project_id) REFERENCES public.marketplace_projects(id),
+  CONSTRAINT categories_projects_category_id_fkey FOREIGN KEY (category_id) REFERENCES public.categories(id)
 );
 CREATE TABLE public.contracts (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -48,10 +72,10 @@ CREATE TABLE public.contracts (
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
   CONSTRAINT contracts_pkey PRIMARY KEY (id),
-  CONSTRAINT contracts_freelancer_id_fkey FOREIGN KEY (freelancer_id) REFERENCES auth.users(id),
-  CONSTRAINT contracts_project_id_fkey FOREIGN KEY (project_id) REFERENCES public.marketplace_projects(id),
   CONSTRAINT contracts_proposal_id_fkey FOREIGN KEY (proposal_id) REFERENCES public.proposals(id),
-  CONSTRAINT contracts_client_id_fkey FOREIGN KEY (client_id) REFERENCES auth.users(id)
+  CONSTRAINT contracts_project_id_fkey FOREIGN KEY (project_id) REFERENCES public.marketplace_projects(id),
+  CONSTRAINT contracts_client_id_fkey FOREIGN KEY (client_id) REFERENCES auth.users(id),
+  CONSTRAINT contracts_freelancer_id_fkey FOREIGN KEY (freelancer_id) REFERENCES auth.users(id)
 );
 CREATE TABLE public.conversations (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -64,9 +88,9 @@ CREATE TABLE public.conversations (
   unread_by_client boolean NOT NULL DEFAULT false,
   unread_by_freelancer boolean NOT NULL DEFAULT false,
   CONSTRAINT conversations_pkey PRIMARY KEY (id),
+  CONSTRAINT conversations_freelancer_id_fkey FOREIGN KEY (freelancer_id) REFERENCES auth.users(id),
   CONSTRAINT conversations_client_id_fkey FOREIGN KEY (client_id) REFERENCES auth.users(id),
-  CONSTRAINT conversations_project_id_fkey FOREIGN KEY (project_id) REFERENCES public.marketplace_projects(id),
-  CONSTRAINT conversations_freelancer_id_fkey FOREIGN KEY (freelancer_id) REFERENCES auth.users(id)
+  CONSTRAINT conversations_project_id_fkey FOREIGN KEY (project_id) REFERENCES public.marketplace_projects(id)
 );
 CREATE TABLE public.jobs (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -107,6 +131,9 @@ CREATE TABLE public.marketplace_projects (
   vipExpiresAt timestamp with time zone,
   vipPaymentReference text,
   vipPaymentStatus text DEFAULT 'pending'::text CHECK ("vipPaymentStatus" = ANY (ARRAY['pending'::text, 'paid'::text, 'failed'::text, 'refunded'::text])),
+  postDuration integer DEFAULT 30 CHECK ("postDuration" = ANY (ARRAY[7, 15, 30])),
+  postExpiresAt timestamp with time zone,
+  autoDeleteAt timestamp with time zone,
   CONSTRAINT marketplace_projects_pkey PRIMARY KEY (id),
   CONSTRAINT marketplace_projects_client_user_id_fkey FOREIGN KEY (client_user_id) REFERENCES auth.users(id)
 );
@@ -120,9 +147,9 @@ CREATE TABLE public.messages (
   is_read boolean NOT NULL DEFAULT false,
   attachments jsonb,
   CONSTRAINT messages_pkey PRIMARY KEY (id),
-  CONSTRAINT messages_receiver_id_fkey FOREIGN KEY (receiver_id) REFERENCES auth.users(id),
   CONSTRAINT messages_conversation_id_fkey FOREIGN KEY (conversation_id) REFERENCES public.conversations(id),
-  CONSTRAINT messages_sender_id_fkey FOREIGN KEY (sender_id) REFERENCES auth.users(id)
+  CONSTRAINT messages_sender_id_fkey FOREIGN KEY (sender_id) REFERENCES auth.users(id),
+  CONSTRAINT messages_receiver_id_fkey FOREIGN KEY (receiver_id) REFERENCES auth.users(id)
 );
 CREATE TABLE public.profiles (
   id uuid NOT NULL,
@@ -167,8 +194,8 @@ CREATE TABLE public.proposals (
   created_at timestamp with time zone NOT NULL DEFAULT now(),
   project_id bigint NOT NULL,
   CONSTRAINT proposals_pkey PRIMARY KEY (id),
-  CONSTRAINT proposals_freelancer_id_fkey FOREIGN KEY (freelancer_id) REFERENCES auth.users(id),
-  CONSTRAINT fk_proposals_project_id FOREIGN KEY (project_id) REFERENCES public.marketplace_projects(id)
+  CONSTRAINT fk_proposals_project_id FOREIGN KEY (project_id) REFERENCES public.marketplace_projects(id),
+  CONSTRAINT proposals_freelancer_id_fkey FOREIGN KEY (freelancer_id) REFERENCES auth.users(id)
 );
 CREATE TABLE public.recruitment_jobs (
   id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
@@ -210,6 +237,6 @@ CREATE TABLE public.saved_jobs (
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
   CONSTRAINT saved_jobs_pkey PRIMARY KEY (id),
-  CONSTRAINT saved_jobs_job_id_fkey FOREIGN KEY (job_id) REFERENCES public.marketplace_projects(id),
-  CONSTRAINT saved_jobs_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+  CONSTRAINT saved_jobs_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id),
+  CONSTRAINT saved_jobs_job_id_fkey FOREIGN KEY (job_id) REFERENCES public.marketplace_projects(id)
 );

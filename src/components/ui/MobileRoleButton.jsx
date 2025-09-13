@@ -27,10 +27,14 @@ const MobileRoleButton = ({ currentRole, roles = {}, onRoleChange }) => {
   }, [isOpen]);
 
   const handleSelect = (roleKey) => {
-    if (onRoleChange) {
-      onRoleChange(roleKey);
-    }
     setIsOpen(false);
+    
+    // Đảm bảo callback được gọi sau khi dropdown đã đóng
+    setTimeout(() => {
+      if (onRoleChange) {
+        onRoleChange(roleKey);
+      }
+    }, 100);
   };
 
   return (
@@ -60,7 +64,11 @@ const MobileRoleButton = ({ currentRole, roles = {}, onRoleChange }) => {
             {Object.entries(roles).map(([key, role]) => (
               <button
                 key={key}
-                onClick={() => handleSelect(key)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleSelect(key);
+                }}
                 className={`w-full flex items-center space-x-2 px-3 py-2 text-sm text-left transition-colors ${
                   key === currentRole
                     ? 'bg-accent text-accent-foreground'

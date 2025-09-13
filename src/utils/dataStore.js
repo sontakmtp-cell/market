@@ -111,8 +111,42 @@ export const saveRecruitmentJob = async (job) => {
   }
 };
 
-// Project categories join-table helpers (optional if table exists)
+// Project categories join-table helpers (uses new categories_projects table)
 export const getProjectCategories = async (projectId) => {
+  try {
+    // Try new categories_projects table first
+    const { data, error } = await supabase
+      .from('categories_projects')
+      .select(`
+        categories (
+          id,
+          name,
+          slug,
+          description,
+          icon,
+          color
+        )
+      `)
+      .eq('project_id', projectId);
+
+    if (error) {
+      // Table may not exist; try legacy format
+      if (error?.code === '42P01') {
+        return await getProjectCategoriesLegacy(projectId);
+      }
+      console.error('Error fetching project categories:', error);
+      return [];
+    }
+    
+    return (data || []).map(item => item.categories?.slug).filter(Boolean);
+  } catch (e) {
+    console.error('Unexpected error fetching project categories:', e);
+    return [];
+  }
+};
+
+// Legacy fallback for old project_categories table
+const getProjectCategoriesLegacy = async (projectId) => {
   try {
     const { data, error } = await supabase
       .from('project_categories')
@@ -120,20 +154,74 @@ export const getProjectCategories = async (projectId) => {
       .eq('project_id', projectId);
 
     if (error) {
-      // Table may not exist; return empty list
       if (error?.code === '42P01') return [];
-      console.error('Error fetching project categories:', error);
+      console.error('Error fetching legacy project categories:', error);
       return [];
     }
     return (data || []).map(r => r.category).filter(Boolean);
   } catch (e) {
-    console.error('Unexpected error fetching project categories:', e);
+    console.error('Unexpected error fetching legacy project categories:', e);
     return [];
   }
 };
 
 export const setProjectCategories = async (projectId, categories = []) => {
-  // Idempotent replace-all implementation
+  // Updated to use new categories_projects table with proper category IDs
+  try {
+    // Import CategoryService for slug to ID conversion
+    const { CategoryService } = await import('../services/categoryService.js');
+    
+    // Clear existing categories
+    const { error: delErr } = await supabase
+      .from('categories_projects')
+      .delete()
+      .eq('project_id', projectId);
+    
+    if (delErr && delErr.code !== '42P01') {
+      throw delErr;
+    }
+
+    if (!categories?.length) return { data: [], error: null };
+
+    // Convert category slugs to IDs
+    const allCategories = await CategoryService.getCategories();
+    const categoryIds = categories
+      .map(slug => {
+        const category = allCategories.find(cat => cat.slug === slug);
+        return category?.id;
+      })
+      .filter(Boolean);
+
+    if (categoryIds.length === 0) {
+      console.warn('No valid category IDs found for slugs:', categories);
+      return { data: [], error: null };
+    }
+
+    // Insert new category associations
+    const rows = categoryIds.map(categoryId => ({ 
+      project_id: projectId, 
+      category_id: categoryId 
+    }));
+    
+    const { data, error } = await supabase
+      .from('categories_projects')
+      .insert(rows)
+      .select();
+      
+    if (error) throw error;
+    
+    return { data, error: null };
+  } catch (e) {
+    // Try legacy fallback if new table doesn't exist
+    if (e?.code === '42P01') {
+      return await setProjectCategoriesLegacy(projectId, categories);
+    }
+    throw e;
+  }
+};
+
+// Legacy fallback for old project_categories table
+const setProjectCategoriesLegacy = async (projectId, categories = []) => {
   try {
     // Clear existing
     const { error: delErr } = await supabase
@@ -152,7 +240,6 @@ export const setProjectCategories = async (projectId, categories = []) => {
     if (error) throw error;
     return { data, error: null };
   } catch (e) {
-    // Propagate to let caller decide; useful to ignore if table missing
     throw e;
   }
 };
@@ -319,6 +406,31 @@ export const getProjectById = async (id) => {
       return null;
     }
     
+    // Ensure proper data type conversion for form compatibility
+    if (data) {
+      return {
+        ...data,
+        // Ensure numeric fields are properly handled
+        budgetMin: data.budgetMin || 0,
+        budgetMax: data.budgetMax || 0,
+        postDuration: data.postDuration || 30,
+        isUrgent: Boolean(data.isUrgent),
+        // Ensure arrays are properly handled
+        skills: Array.isArray(data.skills) ? data.skills : [],
+        objectives: Array.isArray(data.objectives) ? data.objectives : [],
+        deliverables: Array.isArray(data.deliverables) ? data.deliverables : [],
+        attachments: Array.isArray(data.attachments) ? data.attachments : [],
+        // Ensure client object has proper structure
+        client: data.client || {
+          name: 'Khách hàng',
+          company: '',
+          rating: 5,
+          reviewCount: 0,
+          location: ''
+        }
+      };
+    }
+    
     return data;
   } catch (e) {
     console.error('Unexpected error fetching project by ID:', e);
@@ -353,22 +465,17 @@ export const saveProject = async (project) => {
       // Keep single primary category for compatibility
       category: primaryCategory,
       skills: Array.isArray(project?.skills) ? project.skills : [],
-      budgetMin: typeof project?.budgetMin === 'number' ? project.budgetMin : 0,
-      budgetMax: typeof project?.budgetMax === 'number' ? project.budgetMax : 0,
+      budgetMin: typeof project?.budgetMin === 'number' ? project.budgetMin : (typeof project?.budgetMin === 'string' ? parseFloat(project.budgetMin) || 0 : 0),
+      budgetMax: typeof project?.budgetMax === 'number' ? project.budgetMax : (typeof project?.budgetMax === 'string' ? parseFloat(project.budgetMax) || 0 : 0),
       currency: project?.currency ?? 'VND',
-      duration: project?.duration ?? '',
-      // Accept either 'YYYY-MM-DD' or ISO; normalize to ISO for DB
-      deadline: project?.deadline
-        ? (typeof project.deadline === 'string' && /\d{4}-\d{2}-\d{2}$/.test(project.deadline)
-            ? new Date(project.deadline + 'T00:00:00Z').toISOString()
-            : project.deadline)
-        : '',
-      isUrgent: !!project?.isUrgent,
+      // New post duration fields
+      postDuration: typeof project?.postDuration === 'number' ? project.postDuration : (typeof project?.postDuration === 'string' ? parseInt(project.postDuration) || 30 : 30),
+      isUrgent: Boolean(project?.isUrgent),
       location: project?.location ?? '',
       attachments: Array.isArray(project?.attachments) ? project.attachments : [],
       objectives: Array.isArray(project?.objectives) ? project.objectives : [],
-      technicalRequirements: Array.isArray(project?.technicalRequirements) ? project.technicalRequirements : [],
       deliverables: Array.isArray(project?.deliverables) ? project.deliverables : [],
+      technicalRequirements: Array.isArray(project?.technicalRequirements) ? project.technicalRequirements : [],
       client: project?.client ?? {
         name: '',
         company: '',
@@ -381,6 +488,11 @@ export const saveProject = async (project) => {
       ...(project?.displayType ? { displayType: project.displayType } : {}),
       ...(typeof project?.vipFeePaid !== 'undefined' ? { vipFeePaid: project.vipFeePaid } : {}),
       ...(typeof project?.vipActivatedAt !== 'undefined' ? { vipActivatedAt: project.vipActivatedAt } : {}),
+      ...(typeof project?.vipExpiresAt !== 'undefined' ? { vipExpiresAt: project.vipExpiresAt } : {}),
+      ...(typeof project?.vipPaymentReference !== 'undefined' ? { vipPaymentReference: project.vipPaymentReference } : {}),
+      ...(typeof project?.vipPaymentStatus !== 'undefined' ? { vipPaymentStatus: project.vipPaymentStatus } : {}),
+      ...(typeof project?.postExpiresAt !== 'undefined' ? { postExpiresAt: project.postExpiresAt } : {}),
+      ...(typeof project?.autoDeleteAt !== 'undefined' ? { autoDeleteAt: project.autoDeleteAt } : {}),
       status: project?.status ?? 'active',
       client_user_id: clientUserId,
       updated_at: now,
