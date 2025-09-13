@@ -1,35 +1,47 @@
 import React, { useState, useEffect } from 'react';
+import './job-post.css';
 import { useNavigate, useParams } from 'react-router-dom';
 import Header from '../../components/ui/Header';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Select from '../../components/ui/Select';
 import FileUpload from '../../components/ui/FileUpload';
-import { saveProject, getProjectById } from '../../utils/dataStore';
+import { saveProject, getProjectById, getProjectCategories } from '../../utils/dataStore';
+
+// Helper function to generate unique IDs
+const genId = (prefix = 'id') => `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 import { useSupabase } from '../../contexts/SupabaseContext';
+import { useCategories } from '../../hooks/useCategories';
+import { CategoryService } from '../../services/categoryService';
 
 const JobPost = () => {
   const navigate = useNavigate();
   const { id } = useParams(); // Get project ID from URL for editing
   const { user } = useSupabase(); // Get current user
   const [isEditMode, setIsEditMode] = useState(false);
+  
+  // Use dynamic categories hook
+  const { 
+    categoriesForSelect, 
+    loading: categoriesLoading, 
+    error: categoriesError 
+  } = useCategories();
   const [formData, setFormData] = useState({
     title: '',
     shortDescription: '',
     fullDescription: '',
     category: '',
+    categories: [],
     skills: [],
     budgetMin: '',
     budgetMax: '',
     currency: 'VND',
-    duration: '',
-    deadline: '',
+    postDuration: 30, // Default to 30 days
     isUrgent: false,
     location: '',
     attachments: [],
     referenceDocuments: [],
     objectives: [''],
-    technicalRequirements: [{ category: '', items: [''] }],
     deliverables: [{ title: '', description: '', deadline: '' }],
     displayType: 'standard', // 'standard' or 'vip'
     client: {
@@ -44,6 +56,11 @@ const JobPost = () => {
   const [errors, setErrors] = useState({});
   const [currentSkill, setCurrentSkill] = useState('');
 
+  // Currencies array stays the same
+  const currencies = [
+    { value: 'VND', label: 'VND' },
+    { value: 'USD', label: 'USD' }
+  ];
   // Load project data for editing
   useEffect(() => {
     if (id) {
@@ -52,32 +69,35 @@ const JobPost = () => {
         try {
           const projectData = await getProjectById(id);
           if (projectData) {
-            // Map database fields to form data structure
+            // Map database fields to form data structure with proper data type conversion
             setFormData({
               title: projectData.title || '',
               shortDescription: projectData.shortDescription || '',
               fullDescription: projectData.fullDescription || '',
               category: projectData.category || '',
+              categories: projectData.category ? [projectData.category] : [],
               skills: Array.isArray(projectData.skills) ? projectData.skills : [],
-              budgetMin: projectData.budgetMin?.toString() || '',
-              budgetMax: projectData.budgetMax?.toString() || '',
+              budgetMin: projectData.budgetMin ? projectData.budgetMin.toString() : '',
+              budgetMax: projectData.budgetMax ? projectData.budgetMax.toString() : '',
               currency: projectData.currency || 'VND',
-              duration: projectData.duration || '',
-              deadline: projectData.deadline || '',
-              isUrgent: projectData.isUrgent || false,
+              postDuration: projectData.postDuration || 30,
+              isUrgent: Boolean(projectData.isUrgent),
               location: projectData.location || '',
               attachments: Array.isArray(projectData.attachments) ? projectData.attachments : [],
               referenceDocuments: Array.isArray(projectData.attachments) ? projectData.attachments : [],
-              objectives: Array.isArray(projectData.objectives) ? projectData.objectives : [''],
-              technicalRequirements: Array.isArray(projectData.technicalRequirements) ? projectData.technicalRequirements : [{ category: '', items: [''] }],
-              deliverables: Array.isArray(projectData.deliverables) ? projectData.deliverables : [{ title: '', description: '', deadline: '' }],
+              objectives: Array.isArray(projectData.objectives) && projectData.objectives.length > 0 
+                ? projectData.objectives 
+                : [''],
+              deliverables: Array.isArray(projectData.deliverables) && projectData.deliverables.length > 0 
+                ? projectData.deliverables 
+                : [{ title: '', description: '', deadline: '' }],
               displayType: projectData.displayType || 'standard',
-              client: projectData.client || {
-                name: 'Khách hàng',
-                company: '',
-                rating: 5,
-                reviewCount: 0,
-                location: ''
+              client: {
+                name: projectData.client?.name || 'Khách hàng',
+                company: projectData.client?.company || '',
+                rating: Number(projectData.client?.rating) || 5,
+                reviewCount: Number(projectData.client?.reviewCount) || 0,
+                location: projectData.client?.location || ''
               }
             });
           }
@@ -91,24 +111,28 @@ const JobPost = () => {
     }
   }, [id, navigate]);
 
-  const categories = [
-    { value: 'structural', label: 'Kết cấu xây dựng' },
-    { value: 'mechanical', label: 'Cơ khí' },
-    { value: 'electronic', label: 'Điện tử' },
-    { value: 'crane', label: 'Cần cẩu' },
-    { value: 'architecture', label: 'Kiến trúc' },
-    { value: 'other', label: 'Khác' }
-  ];
-
-  const currencies = [
-    { value: 'VND', label: 'VND' },
-    { value: 'USD', label: 'USD' }
-  ];
+  // Load categories from join table if available when editing
+  useEffect(() => {
+    const loadCategories = async () => {
+      if (!id) return;
+      try {
+        const cats = await getProjectCategories(id);
+        if (Array.isArray(cats) && cats.length > 0) {
+          setFormData(prev => ({ ...prev, categories: cats, category: cats[0] }));
+        }
+      } catch (e) {
+        // ignore if table not present
+        console.warn('Could not load project categories:', e);
+      }
+    };
+    loadCategories();
+  }, [id]);
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
       ...prev,
-      [field]: value
+      [field]: value,
+      ...(field === 'categories' ? { category: Array.isArray(value) && value.length ? value[0] : '' } : {})
     }));
     // Clear error when user starts typing
     if (errors[field]) {
@@ -167,42 +191,7 @@ const JobPost = () => {
     }));
   };
 
-  const addTechnicalRequirement = () => {
-    setFormData(prev => ({
-      ...prev,
-      technicalRequirements: [...prev.technicalRequirements, { category: '', items: [''] }]
-    }));
-  };
 
-  const updateTechnicalRequirement = (index, field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      technicalRequirements: prev.technicalRequirements.map((req, i) => 
-        i === index ? { ...req, [field]: value } : req
-      )
-    }));
-  };
-
-  const addTechnicalItem = (reqIndex) => {
-    setFormData(prev => ({
-      ...prev,
-      technicalRequirements: prev.technicalRequirements.map((req, i) => 
-        i === reqIndex ? { ...req, items: [...req.items, ''] } : req
-      )
-    }));
-  };
-
-  const updateTechnicalItem = (reqIndex, itemIndex, value) => {
-    setFormData(prev => ({
-      ...prev,
-      technicalRequirements: prev.technicalRequirements.map((req, i) => 
-        i === reqIndex ? {
-          ...req,
-          items: req.items.map((item, j) => j === itemIndex ? value : item)
-        } : req
-      )
-    }));
-  };
 
   const addDeliverable = () => {
     setFormData(prev => ({
@@ -275,8 +264,8 @@ const JobPost = () => {
       newErrors.budgetMin = 'Ngân sách tối thiểu không được lớn hơn ngân sách tối đa';
     }
 
-    if (!formData.deadline) {
-      newErrors.deadline = 'Hạn chót là bắt buộc';
+    if (!formData.postDuration || ![7, 15, 30].includes(parseInt(formData.postDuration))) {
+      newErrors.postDuration = 'Thời gian duy trì bài đăng là bắt buộc';
     }
 
     setErrors(newErrors);
@@ -309,30 +298,42 @@ const JobPost = () => {
     }
 
     try {
-      // Clean up data before saving
+      // Clean up data before saving - ensure proper mapping to database schema
       const cleanData = {
         ...formData,
-        budgetMin: parseFloat(formData.budgetMin),
-        budgetMax: parseFloat(formData.budgetMax),
-        objectives: formData.objectives.filter(obj => obj.trim()),
-        technicalRequirements: formData.technicalRequirements
-          .filter(req => req.category.trim())
-          .map(req => ({
-            ...req,
-            items: req.items.filter(item => item.trim())
-          })),
-        deliverables: formData.deliverables.filter(del => del.title.trim()),
+        // Map categories properly
+        category: Array.isArray(formData.categories) && formData.categories.length ? formData.categories[0] : '',
+        categories: Array.isArray(formData.categories) ? formData.categories : [],
+        // Ensure numeric values
+        budgetMin: parseFloat(formData.budgetMin) || 0,
+        budgetMax: parseFloat(formData.budgetMax) || 0,
+        postDuration: parseInt(formData.postDuration) || 30,
+        // Filter empty objectives and deliverables
+        objectives: formData.objectives.filter(obj => obj && obj.trim()),
+        deliverables: formData.deliverables.filter(del => del && del.title && del.title.trim()),
+        // Map attachments properly
         attachments: formData.referenceDocuments.map(doc => ({
-          id: doc.id,
-          name: doc.name,
-          size: doc.size,
-          type: doc.type,
+          id: doc.id || genId('doc'),
+          name: doc.name || 'Unknown',
+          size: doc.size || 0,
+          type: doc.type || 'application/octet-stream',
           url: doc.url || null, // Store the Supabase URL
           uploadedAt: doc.uploadedAt || new Date().toISOString()
         })),
         // Add VIP display metadata
         vipFeePaid: formData.displayType === 'vip' ? (!isEditMode ? 10000 : 0) : 0,
-        vipActivatedAt: formData.displayType === 'vip' ? new Date().toISOString() : null
+        vipActivatedAt: formData.displayType === 'vip' ? new Date().toISOString() : null,
+        // Ensure proper data types for database
+        isUrgent: Boolean(formData.isUrgent),
+        skills: Array.isArray(formData.skills) ? formData.skills : [],
+        // Ensure client object has proper structure
+        client: {
+          name: formData.client?.name || 'Khách hàng',
+          company: formData.client?.company || '',
+          rating: Number(formData.client?.rating) || 5,
+          reviewCount: Number(formData.client?.reviewCount) || 0,
+          location: formData.client?.location || ''
+        }
       };
 
       // If in edit mode, include the project ID
@@ -341,7 +342,18 @@ const JobPost = () => {
       }
 
       const savedProject = await saveProject(cleanData);
+      
       if (savedProject?.id) {
+        // Update project categories using the new system
+        try {
+          if (cleanData.categories && cleanData.categories.length > 0) {
+            await CategoryService.updateProjectCategories(savedProject.id, cleanData.categories);
+          }
+        } catch (categoryError) {
+          console.warn('Could not update project categories:', categoryError);
+          // Continue anyway as the project was saved successfully
+        }
+        
         let message = isEditMode ? 'Dự án đã được cập nhật thành công!' : 'Dự án đã được đăng thành công!';
         
         if (formData.displayType === 'vip' && !isEditMode) {
@@ -388,7 +400,7 @@ const JobPost = () => {
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-8">
+          <form onSubmit={handleSubmit} className="job-post-form space-y-8">
             {/* Basic Information */}
             <section>
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Thông tin cơ bản</h2>
@@ -406,12 +418,21 @@ const JobPost = () => {
                 <div>
                   <Select
                     label="Danh mục *"
-                    value={formData.category}
-                    onChange={(value) => handleInputChange('category', value)}
-                    options={categories}
-                    placeholder="Chọn danh mục"
-                    error={errors.category}
+                    value={formData.categories}
+                    multiple
+                    searchable
+                    clearable
+                    loading={categoriesLoading}
+                    onChange={(value) => handleInputChange('categories', value)}
+                    options={categoriesForSelect}
+                    placeholder={categoriesLoading ? "Đang tải danh mục..." : "Chọn danh mục"}
+                    error={errors.categories || errors.category}
                   />
+                  {categoriesError && (
+                    <p className="text-sm text-orange-600 mt-1">
+                      ⚠️ Không thể tải danh mục từ server, sử dụng danh mục mặc định
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -434,6 +455,23 @@ const JobPost = () => {
                   <label htmlFor="isUrgent" className="text-sm text-gray-700">
                     Dự án gấp
                   </label>
+                </div>
+                {/* Styled urgent checkbox */}
+                <div>
+                  <div className="magic-checkbox-group">
+                    <label className="magic-check">
+                      <input
+                        type="checkbox"
+                        checked={formData.isUrgent}
+                        onChange={(e) => handleInputChange('isUrgent', e.target.checked)}
+                      />
+                      <span className="liquid-box">
+                        <span className="liquid-fill"></span>
+                        <span className="sparkle"></span>
+                      </span>
+                      <span className="magic-label">Dự án gấp</span>
+                    </label>
+                  </div>
                 </div>
               </div>
             </section>
@@ -581,71 +619,25 @@ const JobPost = () => {
                   />
                 </div>
                 <div>
-                  <Input
-                    label="Thời gian thực hiện"
-                    value={formData.duration}
-                    onChange={(e) => handleInputChange('duration', e.target.value)}
-                    placeholder="Ví dụ: 3 tháng"
+                  <Select
+                    label="Thời gian duy trì bài đăng *"
+                    value={formData.postDuration}
+                    onChange={(value) => handleInputChange('postDuration', value)}
+                    options={[
+                      { value: 7, label: '7 ngày' },
+                      { value: 15, label: '15 ngày' },
+                      { value: 30, label: '30 ngày' }
+                    ]}
+                    error={errors.postDuration}
                   />
-                </div>
-                <div className="md:col-span-2">
-                  <Input
-                    label="Hạn chót *"
-                    type="date"
-                    value={formData.deadline}
-                    onChange={(e) => handleInputChange('deadline', e.target.value)}
-                    error={errors.deadline}
-                  />
+                  <p className="text-sm text-gray-600 mt-1">
+                    Bài đăng sẽ tự động bị xóa sau thời gian này nếu không có đề xuất nào được chấp nhận
+                  </p>
                 </div>
               </div>
             </section>
 
-            {/* Technical Requirements */}
-            <section>
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Yêu cầu kỹ thuật</h2>
-              {formData.technicalRequirements.map((req, reqIndex) => (
-                <div key={reqIndex} className="border border-gray-200 rounded-lg p-4 mb-4">
-                  <div className="mb-3">
-                    <input
-                      type="text"
-                      value={req.category}
-                      onChange={(e) => updateTechnicalRequirement(reqIndex, 'category', e.target.value)}
-                      placeholder="Danh mục yêu cầu (ví dụ: Phần mềm, Thiết bị)"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                  {req.items.map((item, itemIndex) => (
-                    <div key={itemIndex} className="flex space-x-2 mb-2">
-                      <input
-                        type="text"
-                        value={item}
-                        onChange={(e) => updateTechnicalItem(reqIndex, itemIndex, e.target.value)}
-                        placeholder="Yêu cầu cụ thể"
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                  ))}
-                  <div className="flex space-x-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => addTechnicalItem(reqIndex)}
-                      className="text-sm"
-                    >
-                      + Thêm yêu cầu
-                    </Button>
-                  </div>
-                </div>
-              ))}
-              <Button
-                type="button"
-                variant="outline"
-                onClick={addTechnicalRequirement}
-                className="text-sm"
-              >
-                + Thêm danh mục yêu cầu
-              </Button>
-            </section>
+
 
             <section>
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Tài liệu tham khảo</h2>
@@ -921,7 +913,7 @@ const JobPost = () => {
               >
                 Hủy
               </Button>
-              <Button type="submit" className="relative">
+              <Button type="submit" className="zjssun-button">
                 {isEditMode ? 'Cập nhật dự án' : 'Đăng dự án'}
                 {formData.displayType === 'vip' && !isEditMode && (
                   <span className="ml-2 text-xs bg-yellow-400 text-yellow-900 px-2 py-1 rounded-full">

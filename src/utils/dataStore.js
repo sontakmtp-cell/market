@@ -111,6 +111,52 @@ export const saveRecruitmentJob = async (job) => {
   }
 };
 
+// Project categories join-table helpers (optional if table exists)
+export const getProjectCategories = async (projectId) => {
+  try {
+    const { data, error } = await supabase
+      .from('project_categories')
+      .select('category')
+      .eq('project_id', projectId);
+
+    if (error) {
+      // Table may not exist; return empty list
+      if (error?.code === '42P01') return [];
+      console.error('Error fetching project categories:', error);
+      return [];
+    }
+    return (data || []).map(r => r.category).filter(Boolean);
+  } catch (e) {
+    console.error('Unexpected error fetching project categories:', e);
+    return [];
+  }
+};
+
+export const setProjectCategories = async (projectId, categories = []) => {
+  // Idempotent replace-all implementation
+  try {
+    // Clear existing
+    const { error: delErr } = await supabase
+      .from('project_categories')
+      .delete()
+      .eq('project_id', projectId);
+    if (delErr) throw delErr;
+
+    if (!categories?.length) return { data: [], error: null };
+
+    const rows = categories.map(slug => ({ project_id: projectId, category: slug }));
+    const { data, error } = await supabase
+      .from('project_categories')
+      .insert(rows)
+      .select();
+    if (error) throw error;
+    return { data, error: null };
+  } catch (e) {
+    // Propagate to let caller decide; useful to ignore if table missing
+    throw e;
+  }
+};
+
 // Applications
 export const getApplications = async () => {
   try {
@@ -295,18 +341,28 @@ export const saveProject = async (project) => {
     }
 
     const now = new Date().toISOString();
+    const primaryCategory = Array.isArray(project?.categories) && project.categories.length > 0
+      ? project.categories[0]
+      : (project?.category ?? '');
+
     const projectData = {
       // Only include columns that exist in marketplace_projects
       title: project?.title ?? '',
       shortDescription: project?.shortDescription ?? '',
       fullDescription: project?.fullDescription ?? '',
-      category: project?.category ?? '',
+      // Keep single primary category for compatibility
+      category: primaryCategory,
       skills: Array.isArray(project?.skills) ? project.skills : [],
       budgetMin: typeof project?.budgetMin === 'number' ? project.budgetMin : 0,
       budgetMax: typeof project?.budgetMax === 'number' ? project.budgetMax : 0,
       currency: project?.currency ?? 'VND',
       duration: project?.duration ?? '',
-      deadline: project?.deadline ?? '',
+      // Accept either 'YYYY-MM-DD' or ISO; normalize to ISO for DB
+      deadline: project?.deadline
+        ? (typeof project.deadline === 'string' && /\d{4}-\d{2}-\d{2}$/.test(project.deadline)
+            ? new Date(project.deadline + 'T00:00:00Z').toISOString()
+            : project.deadline)
+        : '',
       isUrgent: !!project?.isUrgent,
       location: project?.location ?? '',
       attachments: Array.isArray(project?.attachments) ? project.attachments : [],
@@ -321,6 +377,10 @@ export const saveProject = async (project) => {
         location: ''
       },
       proposalCount: typeof project?.proposalCount === 'number' ? project.proposalCount : 0,
+      // VIP fields (optional)
+      ...(project?.displayType ? { displayType: project.displayType } : {}),
+      ...(typeof project?.vipFeePaid !== 'undefined' ? { vipFeePaid: project.vipFeePaid } : {}),
+      ...(typeof project?.vipActivatedAt !== 'undefined' ? { vipActivatedAt: project.vipActivatedAt } : {}),
       status: project?.status ?? 'active',
       client_user_id: clientUserId,
       updated_at: now,
@@ -343,6 +403,17 @@ export const saveProject = async (project) => {
         throw new Error(`Failed to update project: ${error.message}`);
       }
       
+      // Try to sync categories join table if provided
+      if (Array.isArray(project?.categories)) {
+        try {
+          await setProjectCategories(data.id, project.categories);
+        } catch (err) {
+          // Ignore if join table not present
+          if (err?.code !== '42P01') {
+            console.warn('Warning syncing categories:', err?.message || err);
+          }
+        }
+      }
       return data;
     } else {
       // Insert new project
@@ -366,6 +437,16 @@ export const saveProject = async (project) => {
         throw new Error(`Failed to create project: ${error.message}`);
       }
       
+      // Sync categories join table if provided
+      if (data?.id && Array.isArray(project?.categories)) {
+        try {
+          await setProjectCategories(data.id, project.categories);
+        } catch (err) {
+          if (err?.code !== '42P01') {
+            console.warn('Warning syncing categories:', err?.message || err);
+          }
+        }
+      }
       return data;
     }
   } catch (e) {
